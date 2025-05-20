@@ -384,4 +384,48 @@ function baixarHTML() {
 }
 </script>
 
-</body></html>
+
+<script>
+  const itensPorPagina = 8;
+  let paginaAtual = { produtos: 1, ofertas: 1 };
+
+  function paginar(menu) {
+    const todos = Array.from(document.querySelectorAll(`#${menu} .product-card`));
+    const paginacao = document.getElementById(`paginacao-${menu}`);
+    const container = document.getElementById(`${menu}-container`);
+
+    todos.forEach(e => container.appendChild(e));
+    const totalPaginas = Math.ceil(todos.length / itensPorPagina);
+    if (totalPaginas <= 1) return paginacao.innerHTML = "";
+
+    todos.forEach(el => el.style.display = "none");
+    const inicio = (paginaAtual[menu] - 1) * itensPorPagina;
+    const fim = paginaAtual[menu] * itensPorPagina;
+    todos.slice(inicio, fim).forEach(el => el.style.display = "block");
+
+    let html = "";
+    for (let i = 1; i <= totalPaginas; i++) {
+      html += `<button onclick="mudarPagina('${menu}', ${i})" style="margin:2px;padding:6px 10px;border-radius:6px;border:1px solid #ccc;background:${i===paginaAtual[menu]?'#eef':'#fff'};">${i}</button>`;
+    }
+    html += `<button onclick="mudarPagina('${menu}', ${paginaAtual[menu] + 1})" ${paginaAtual[menu] === totalPaginas ? 'disabled' : ''}>›</button>`;
+    html += `<button onclick="mudarPagina('${menu}', ${totalPaginas})" ${paginaAtual[menu] === totalPaginas ? 'disabled' : ''}>»</button>`;
+    paginacao.innerHTML = html;
+  }
+
+  function mudarPagina(menu, num) {
+    const todos = Array.from(document.querySelectorAll(`#${menu} .product-card`));
+    const totalPaginas = Math.ceil(todos.length / itensPorPagina);
+    if (num < 1 || num > totalPaginas) return;
+    paginaAtual[menu] = num;
+    paginar(menu);
+  }
+
+  window.addEventListener("load", () => {
+    setTimeout(() => {
+      paginar("produtos");
+      paginar("ofertas");
+    }, 300);
+  });
+</script>
+</body>
+</html>
