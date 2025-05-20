@@ -256,6 +256,8 @@ function adicionarProduto() {
   card.dataset.preco = preco;
   card.innerHTML = `
     <img src="${img}" alt="${nome}">
+<small style="display:block; font-size:11px; color:gray;">${img}</small>
+<script>console.log("Imagem carregada:", "${img}")</script>
     <h3>${nome}</h3>
     <p>R$ ${preco.toFixed(2)}</p>
     <input type="number" min="1" value="1" id="${idSanitizado}">
@@ -273,9 +275,8 @@ function carregarPlanilha() {
   if (!file) return alert("Selecione um arquivo");
 
   const extrairIdOuURL = (link) => {
-    const cleaned = link.trim().replace(/['"]/g, "");
-    const match = cleaned.match(/\/d\/([\w-]+)/);
-    return match ? `https://drive.google.com/uc?export=view&id=${match[1]}` : cleaned;
+    const match = link.match(/\/d\/([\w-]+)/);
+    return match ? `https://drive.google.com/uc?export=view&id=${match[1]}` : link;
   };
 
   const reader = new FileReader();
@@ -288,7 +289,7 @@ function carregarPlanilha() {
       const nome = row.nome || row.Nome;
       const preco = parseFloat(row.valor || row.Valor);
       const linkImagem = row.imagem || row.imagem_id || row.link || "";
-      const img = extrairIdOuURL(linkImagem);
+      const img = extrairIdOuURL(linkImagem.trim());
       const menu = (row.menu || row.Menu || "produtos").toLowerCase();
       const container = document.getElementById(menu);
       if (!container) return;
@@ -299,6 +300,8 @@ function carregarPlanilha() {
       card.dataset.preco = preco;
       card.innerHTML = `
         <img src="${img}" alt="${nome}">
+<small style="display:block; font-size:11px; color:gray;">${img}</small>
+<script>console.log("Imagem carregada:", "${img}")</script>
         <h3>${nome}</h3>
         <p>R$ ${preco.toFixed(2)}</p>
         <input type="number" min="1" value="1" id="${idSanitizado}">
