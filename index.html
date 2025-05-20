@@ -384,4 +384,18 @@ function baixarHTML() {
 }
 </script>
 
+
+<script>
+  function alterarLogo() {
+    const novaLogo = document.getElementById("logo-url").value.trim();
+    if (!novaLogo) return alert("Informe a URL da nova logo.");
+    document.getElementById("logo-img").src = novaLogo;
+    localStorage.setItem("logoURL", novaLogo);
+  }
+
+  window.addEventListener("load", () => {
+    const logoSalva = localStorage.getItem("logoURL");
+    if (logoSalva) document.getElementById("logo-img").src = logoSalva;
+  });
+</script>
 </body></html>
