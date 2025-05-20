@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="pt-BR"><head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
@@ -59,7 +58,7 @@
     }
     .section { display: none; padding: 20px; }
     .section.active { display: block; }
-  
+
     .tooltip {
         position: relative;
         display: inline-block;
@@ -79,25 +78,25 @@
     .tooltip:hover .tooltip-img {
         visibility: visible;
     }
-    </style>
+</style>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script></head>
+</head>
 <body>
 <header>
 <img alt="Logo da Loja" class="logo" src="logo.png"/>
 <h1>Elementos Materiais</h1>
 </header>
 <nav>
-<a onclick="showSection('produtos')">Produtos</a>
-<a onclick="showSection('ofertas')">Ofertas</a>
-<a onclick="showSection('carrinho')">Carrinho</a>
+<a data-section="produtos">Produtos</a>
+<a data-section="ofertas">Ofertas</a>
+<a data-section="carrinho">Carrinho</a>
 </nav>
 <div class="search-bar">
 <input id="search" onkeyup="searchProducts()" placeholder="Buscar produtos..." type="text"/>
 </div>
 <div class="filters">
 <label>Ordenar por:
-      <select onchange="sortProducts(this.value)">
+  <select onchange="sortProducts(this.value)">
 <option value="nome">Nome (A-Z)</option>
 <option value="menor">Menor Valor</option>
 <option value="maior">Maior Valor</option>
@@ -157,25 +156,229 @@
 <button class="botao" onclick="enviarPedido()">Enviar pedido para WhatsApp</button>
 <p><em>Você pode solicitar o pagamento por <strong>PIX</strong>, receber um <strong>link de pagamento</strong> ou negociar pelo WhatsApp.</em></p>
 </section>
+
 <script>
-function trocarLogo() {
-  const novaLogo = document.getElementById("nova-logo").value;
-  if (novaLogo.trim()) {
-    document.querySelector("img.logo").src = novaLogo.trim();
-    localStorage.setItem("logoSrc", novaLogo.trim());
+
+// Carrinho e produtos persistentes
+let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
+let produtosSalvos = JSON.parse(localStorage.getItem('produtosSalvos')) || [];
+
+function salvarProduto(nome, preco, imagem, menu) {
+  produtosSalvos.push({ nome, preco, imagem, menu });
+  localStorage.setItem('produtosSalvos', JSON.stringify(produtosSalvos));
+}
+
+function carregarProdutosSalvos() {
+  produtosSalvos.forEach(p => {
+    const container = document.getElementById(p.menu);
+    if (!container) return;
+    const idSanitizado = 'qtd-' + p.nome.replace(/\s+/g, '-');
+    const card = document.createElement("div");
+    card.className = "product-card";
+    card.dataset.nome = p.nome;
+    card.dataset.preco = p.preco;
+    card.innerHTML = `
+      
+
+<div style="margin: 10px 0;">
+  <button title="Clique para abrir a imagem" onclick="window.open('${p.imagem}', '_blank')" style="background: none; border: none; cursor: pointer;">
+    📷 Ver Imagem
+  </button>
+</div>
+
+
+      <h3>${p.nome}</h3>
+      <p>R$ ${p.preco.toFixed(2)}</p>
+      <input type="number" min="1" value="1" id="${idSanitizado}">
+      <button onclick="addToCart('${p.nome}', ${p.preco}, '${idSanitizado}', '${p.imagem}')">Adicionar ao Carrinho</button>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function addToCart(nome, preco, inputId, imagem = '') {
+  const qtd = parseInt(document.getElementById(inputId).value) || 1;
+  const existente = carrinho.find(item => item.nome === nome);
+  if (existente) {
+    existente.qtd += qtd;
+  } else {
+    carrinho.push({ nome, preco, qtd, imagem });
   }
+  updateCart();
+  localStorage.setItem('carrinho', JSON.stringify(carrinho));
+}
+
+function updateCart() {
+  const tbody = document.querySelector('#cart-list tbody');
+  const totalElem = document.getElementById('cart-total');
+  tbody.innerHTML = '';
+  let total = 0;
+
+  carrinho.forEach((item, index) => {
+    const subtotal = item.preco * item.qtd;
+    total += subtotal;
+    const tr = document.createElement('tr');
+
+    tr.innerHTML = `
+      <td><img src="${item.imagem || 'https://via.placeholder.com/50'}" width="50"></td>
+      <td>${item.nome}</td>
+      <td>R$ ${item.preco.toFixed(2)}</td>
+      <td>
+        <button onclick="alterarQtd(${index}, -1)">-</button>
+        ${item.qtd}
+        <button onclick="alterarQtd(${index}, 1)">+</button>
+      </td>
+      <td>R$ ${subtotal.toFixed(2)}</td>
+      <td><button onclick="removerItem(${index})">Remover</button></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  totalElem.innerText = `Total: R$ ${total.toFixed(2)}`;
+  localStorage.setItem('carrinho', JSON.stringify(carrinho));
+}
+
+function alterarQtd(index, delta) {
+  carrinho[index].qtd += delta;
+  if (carrinho[index].qtd <= 0) carrinho.splice(index, 1);
+  updateCart();
+}
+
+function removerItem(index) {
+  carrinho.splice(index, 1);
+  updateCart();
+}
+
+function enviarPedido() {
+  if (carrinho.length === 0) {
+    alert("Seu carrinho está vazio!");
+    return;
+  }
+
+  let mensagem = "Olá, gostaria de fazer o seguinte pedido:%0A";
+  let total = 0;
+  carrinho.forEach(p => {
+    const subtotal = p.preco * p.qtd;
+    total += subtotal;
+    mensagem += `- ${p.nome} x${p.qtd} (R$ ${p.preco.toFixed(2)} cada) = R$ ${subtotal.toFixed(2)}%0A`;
+  });
+  mensagem += `%0ATotal: R$ ${total.toFixed(2)}%0A`;
+  mensagem += `%0APrefiro pagar por PIX, link de pagamento ou negociar por aqui.`;
+
+  const obs = document.getElementById('obs-cliente').value;
+  if (obs.trim()) {
+    mensagem += `%0AObservações: ${encodeURIComponent(obs)}`;
+  }
+
+  const numero = "5527981382565";
+  const url = `https://wa.me/${numero}?text=${mensagem}`;
+  window.open(url, '_blank');
+}
+
+function adicionarProduto() {
+  const nome = document.getElementById("nome-prod").value;
+  const preco = parseFloat(document.getElementById("valor-prod").value);
+  const img = document.getElementById("img-prod").value;
+  const menu = document.getElementById("menu-prod").value;
+  const container = document.getElementById(menu);
+  const idSanitizado = 'qtd-' + nome.replace(/\s+/g, '-');
+
+  const card = document.createElement("div");
+  card.className = "product-card";
+  card.dataset.nome = nome;
+  card.dataset.preco = preco;
+  card.innerHTML = `
+    
+
+<div style="margin: 10px 0;">
+  <button title="Clique para abrir a imagem" onclick="window.open('${img}', '_blank')" style="background: none; border: none; cursor: pointer;">
+    📷 Ver Imagem
+  </button>
+</div>
+
+
+    <h3>${nome}</h3>
+    <p>R$ ${preco.toFixed(2)}</p>
+    <input type="number" min="1" value="1" id="${idSanitizado}">
+    <button onclick="addToCart('${nome}', ${preco}, '${idSanitizado}', '${img}')">Adicionar ao Carrinho</button>
+  `;
+  container.appendChild(card);
+  salvarProduto(nome, preco, img, menu);
+}
+
+
+
+function carregarPlanilha() {
+  const file = document.getElementById("excel-upload").files[0];
+  if (!file) return alert("Selecione um arquivo");
+
+  const extrairId = (link) => {
+    const match = link.match(/\/d\/([\w-]+)/);
+    return match ? match[1] : "";
+  };
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: "array" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(sheet);
+    rows.forEach(row => {
+      const nome = row.nome || row.Nome;
+      const preco = parseFloat(row.valor || row.Valor);
+      const linkImagem = row.imagem || row.imagem_id || row.link || "";
+      const imagemId = extrairId(linkImagem);
+      const img = `https://drive.google.com/uc?export=view&id=${imagemId}`;
+      const menu = (row.menu || row.Menu || "produtos").toLowerCase();
+      const container = document.getElementById(menu);
+      if (!container) return;
+      const idSanitizado = 'qtd-' + nome.replace(/\s+/g, '-');
+      const card = document.createElement("div");
+      card.className = "product-card";
+      card.dataset.nome = nome;
+      card.dataset.preco = preco;
+      card.innerHTML = `
+        
+
+<div style="margin: 10px 0;">
+  <button title="Clique para abrir a imagem" onclick="window.open('${img}', '_blank')" style="background: none; border: none; cursor: pointer;">
+    📷 Ver Imagem
+  </button>
+</div>
+
+
+        <h3>${nome}</h3>
+        <p>R$ ${preco.toFixed(2)}</p>
+        <input type="number" min="1" value="1" id="${idSanitizado}">
+        <button onclick="addToCart('${nome}', ${preco}, '${idSanitizado}', '${img}')">Adicionar ao Carrinho</button>
+      `;
+      container.appendChild(card);
+      salvarProduto(nome, preco, img, menu);
+    });
+    alert("Produtos importados com sucesso!");
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+
+
+function fecharPainel() {
+  document.getElementById("admin-panel").style.display = "none";
 }
 
 window.onload = function() {
+  document.querySelectorAll("nav a[data-section]").forEach(link => {
+    link.addEventListener("click", () => {
+      const id = link.getAttribute("data-section");
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    });
+  });
+
   carregarProdutosSalvos();
   updateCart();
 
-  // Restaurar logo salva
-  const logoSalva = localStorage.getItem("logoSrc");
-  if (logoSalva) {
-    document.querySelector("img.logo").src = logoSalva;
-  }
-
+  // Ativar botões do menu
   document.querySelectorAll('nav a').forEach(link => {
     link.addEventListener("click", () => {
       const id = link.getAttribute("onclick").match(/'([^']+)'/)[1];
@@ -184,6 +387,7 @@ window.onload = function() {
     });
   });
 
+  // Ativar botão Admin
   document.getElementById("admin-btn").addEventListener("click", () => {
     document.getElementById("admin-login").style.display = "block";
   });
@@ -199,8 +403,10 @@ window.onload = function() {
       alert("Senha incorreta!");
     }
   });
-}
-</script><script>
+};
+
+
+
 function removerTodosProdutos() {
   if (confirm("Tem certeza que deseja remover TODOS os produtos?")) {
     localStorage.removeItem('produtosSalvos');
@@ -210,7 +416,9 @@ function removerTodosProdutos() {
     alert("Todos os produtos foram removidos!");
   }
 }
-</script><script>
+
+
+
 function baixarHTML() {
   const loginPanel = document.getElementById("admin-login");
   const adminPanel = document.getElementById("admin-panel");
@@ -235,5 +443,10 @@ function baixarHTML() {
     adminPanel.style.display = originalAdminDisplay;
   }, 100);
 }
+
 </script>
-</body></html>
+<script>
+/* Aqui entram todos os scripts do index.antigo.html incluindo funções do carrinho, admin, planilha, etc. */
+</script>
+</body>
+</html>
