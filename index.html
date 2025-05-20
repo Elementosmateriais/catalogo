@@ -2,28 +2,70 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <title>Catálogo - Elementos Materiais</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
-    <style>
-        .product-card { border: 1px solid #ccc; padding: 10px; margin: 10px; display: inline-block; width: 200px; vertical-align: top; }
-        .product-card img { width: 100%; height: auto; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Elementos Materiais</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    header { background: #4CAF50; color: white; padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; }
+    header h1 { margin: 0; }
+    nav a { color: white; margin-left: 10px; text-decoration: none; font-weight: bold; }
+    section { margin-top: 30px; }
+    .product-card { border: 1px solid #ccc; border-radius: 8px; padding: 10px; margin: 10px; width: 200px; display: inline-block; vertical-align: top; text-align: center; background: #f9f9f9; }
+    .product-card img { max-width: 100%; height: auto; }
+    #admin-panel { background: #fff; border: 1px solid #333; padding: 20px; position: absolute; top: 50px; left: 50%; transform: translateX(-50%); display: none; z-index: 999; }
+    button { background: #4CAF50; color: white; border: none; padding: 8px 12px; margin-top: 5px; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #45a049; }
+  </style>
 </head>
 <body>
-    <h1>Catálogo de Produtos</h1>
-    <button onclick="document.getElementById('admin-panel').style.display='block'">Admin</button>
 
-    <div id="admin-panel" style="display:none; border:1px solid #000; padding:10px; margin:10px;">
-        <h2>Painel Admin</h2>
-        <input type="file" id="excel-upload">
-        <button onclick="carregarPlanilha()">Enviar Planilha</button>
-    </div>
+  <header>
+    <h1>Elementos Materiais</h1>
+    <nav>
+      <a href="#produtos">Produtos</a>
+      <a href="#ofertas">Ofertas</a>
+      <a href="#carrinho">Carrinho</a>
+      <button id="admin-btn">Admin</button>
+    </nav>
+  </header>
 
-    <section id="produtos"><h2>Produtos</h2></section>
-    <section id="ofertas"><h2>Ofertas</h2></section>
+  <div id="admin-login" style="display:none; margin:20px 0;">
+    <input type="password" id="admin-pass" placeholder="Senha do Admin">
+    <button id="entrar-admin">Entrar</button>
+  </div>
 
-    <script>
+  <div id="admin-panel">
+    <h2>Painel Admin</h2>
+    <h3>Adicionar Produto</h3>
+    <input type="text" id="nome-produto" placeholder="Nome"><br>
+    <input type="number" id="valor-produto" placeholder="Valor"><br>
+    <input type="text" id="imagem-produto" placeholder="URL da Imagem"><br>
+    <select id="menu-produto">
+      <option value="produtos">Produtos</option>
+      <option value="ofertas">Ofertas</option>
+    </select><br>
+    <button onclick="addManual()">Adicionar Produto</button>
+
+    <h3>Remover Produto</h3>
+    <input type="text" id="remover-nome" placeholder="Nome do Produto">
+    <button onclick="removerProduto()">Remover</button>
+
+    <h3>Adicionar em Massa</h3>
+    <input type="file" id="excel-upload">
+    <button onclick="carregarPlanilha()">Enviar Planilha</button>
+
+    <h3>Exportar</h3>
+    <button onclick="salvarHTML()">Salvar HTML Modificado</button>
+    <button onclick="fecharPainel()">Fechar</button>
+    <button onclick="removerTodos()">Remover Todos os Produtos</button>
+  </div>
+
+  <section id="produtos"><h2>Produtos</h2></section>
+  <section id="ofertas"><h2>Ofertas</h2></section>
+  <section id="carrinho"><h2>Carrinho</h2><ul id="carrinho-itens"></ul></section>
+
+  <script>
     function carregarPlanilha() {
       const file = document.getElementById("excel-upload").files[0];
       if (!file) return alert("Selecione um arquivo");
@@ -57,14 +99,110 @@
             <h3>${nome}</h3>
             <p>R$ ${preco.toFixed(2)}</p>
             <input type="number" min="1" value="1" id="${idSanitizado}">
-            <button onclick="alert('Adicionado: ${nome}')">Adicionar ao Carrinho</button>
+            <button onclick="addToCart('${nome}', ${preco}, '${idSanitizado}', '${img}')">Adicionar ao Carrinho</button>
           `;
           container.appendChild(card);
+          salvarProduto(nome, preco, img, menu);
         });
         alert("Produtos importados com sucesso!");
       };
       reader.readAsArrayBuffer(file);
     }
-    </script>
+
+    function addToCart(nome, preco, inputId, img) {
+      const qtd = parseInt(document.getElementById(inputId).value);
+      const item = document.createElement("li");
+      item.textContent = `${nome} - R$ ${(preco * qtd).toFixed(2)} (${qtd}x)`;
+      document.getElementById("carrinho-itens").appendChild(item);
+    }
+
+    function addManual() {
+      const nome = document.getElementById("nome-produto").value;
+      const preco = parseFloat(document.getElementById("valor-produto").value);
+      const img = document.getElementById("imagem-produto").value;
+      const menu = document.getElementById("menu-produto").value;
+      const container = document.getElementById(menu);
+      const idSanitizado = 'qtd-' + nome.replace(/\s+/g, '-');
+      const card = document.createElement("div");
+      card.className = "product-card";
+      card.dataset.nome = nome;
+      card.dataset.preco = preco;
+      card.innerHTML = `
+        <img src="${img}" alt="${nome}">
+        <h3>${nome}</h3>
+        <p>R$ ${preco.toFixed(2)}</p>
+        <input type="number" min="1" value="1" id="${idSanitizado}">
+        <button onclick="addToCart('${nome}', ${preco}, '${idSanitizado}', '${img}')">Adicionar ao Carrinho</button>
+      `;
+      container.appendChild(card);
+      salvarProduto(nome, preco, img, menu);
+    }
+
+    function salvarProduto(nome, preco, img, menu) {
+      const produtos = JSON.parse(localStorage.getItem("produtos") || "[]");
+      produtos.push({ nome, preco, img, menu });
+      localStorage.setItem("produtos", JSON.stringify(produtos));
+    }
+
+    function carregarProdutosSalvos() {
+      const produtos = JSON.parse(localStorage.getItem("produtos") || "[]");
+      produtos.forEach(({ nome, preco, img, menu }) => {
+        const container = document.getElementById(menu);
+        const idSanitizado = 'qtd-' + nome.replace(/\s+/g, '-');
+        const card = document.createElement("div");
+        card.className = "product-card";
+        card.dataset.nome = nome;
+        card.dataset.preco = preco;
+        card.innerHTML = `
+          <img src="${img}" alt="${nome}">
+          <h3>${nome}</h3>
+          <p>R$ ${preco.toFixed(2)}</p>
+          <input type="number" min="1" value="1" id="${idSanitizado}">
+          <button onclick="addToCart('${nome}', ${preco}, '${idSanitizado}', '${img}')">Adicionar ao Carrinho</button>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function salvarHTML() {
+      alert("Exportar HTML ainda não implementado neste modo.");
+    }
+
+    function fecharPainel() {
+      document.getElementById("admin-panel").style.display = "none";
+    }
+
+    function removerProduto() {
+      const nome = document.getElementById("remover-nome").value.toLowerCase();
+      document.querySelectorAll(".product-card").forEach(card => {
+        if (card.dataset.nome.toLowerCase() === nome) {
+          card.remove();
+        }
+      });
+    }
+
+    function removerTodos() {
+      localStorage.removeItem("produtos");
+      document.querySelectorAll(".product-card").forEach(card => card.remove());
+    }
+
+    window.onload = function() {
+      carregarProdutosSalvos();
+    };
+
+    document.getElementById("admin-btn").addEventListener("click", () => {
+      document.getElementById("admin-login").style.display = "block";
+    });
+
+    document.getElementById("entrar-admin").addEventListener("click", () => {
+      const senha = document.getElementById("admin-pass").value;
+      if (senha === "Elementos2025") {
+        document.getElementById("admin-login").style.display = "none";
+        document.getElementById("admin-panel").style.display = "block";
+      } else {
+        alert("Senha incorreta.");
+      }
+    });
+  </script>
 </body>
 </html>
