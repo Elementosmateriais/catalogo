@@ -78,48 +78,13 @@
     .tooltip:hover .tooltip-img {
         visibility: visible;
     }
-
-
-.img-container {
-  position: relative;
-  width: 100%;
-  height: 150px;
-  overflow: hidden;
-}
-.img-link {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-.img-link .main-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transition: transform 0.3s ease;
-}
-.img-link .lupa-img {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 50px;
-  height: 50px;
-  display: none;
-  z-index: 2;
-}
-.img-link:hover .main-img {
-  transform: scale(1.2);
-}
-.img-link:hover .lupa-img {
-  display: block;
-}
 </style>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 <header>
-<img alt="Logo da Loja" class="logo" src="logo.png"/>
-<h1>Elementos Materiais</h1>
+<h2 style="margin: 0; font-size: 22px;">Catálogo</h2>
+<h1 style="font-size: 48px;">Elementos Materiais</h1>
 </header>
 <nav>
 <a data-section="produtos">Produtos</a>
@@ -165,9 +130,7 @@
 <button onclick="baixarHTML()">Salvar HTML Modificado</button>
 <button onclick="fecharPainel()">Fechar</button>
 <button onclick="removerTodosProdutos()">Remover Todos os Produtos</button>
-<h4>Alterar Logo</h4>
-<input id="nova-logo" placeholder="URL da nova logo" type="text"/><br/>
-<button onclick="trocarLogo()">Atualizar Logo</button>
+<h4 style="text-align:center; font-weight: bold;">Catálogo</h4>
 </div>
 <section class="section products-grid active" id="produtos"></section>
 <section class="section products-grid" id="ofertas"></section>
@@ -215,11 +178,10 @@ function carregarProdutosSalvos() {
     card.innerHTML = `
       
 
-<div class="img-container">
-  <a href="${p.imagem}" target="_blank" class="img-link">
-    <img src="${p.imagem}" alt="${p.nome}" class="main-img">
-    <img src="lupa.png" alt="Lupa" class="lupa-img">
-  </a>
+<div style="margin: 10px 0;">
+  <button title="Clique para abrir a imagem" onclick="window.open('${p.imagem}', '_blank')" style="background: none; border: none; cursor: pointer;">
+    📷 Ver Imagem
+  </button>
 </div>
 
 
@@ -484,5 +446,14 @@ function baixarHTML() {
 <script>
 /* Aqui entram todos os scripts do index.antigo.html incluindo funções do carrinho, admin, planilha, etc. */
 </script>
+
+<footer style="background: #556B2F; color: white; text-align: center; padding: 20px; margin-top: 30px;">
+  <p>Endereço: Avenida Brasília, 57, Serra Dourada 2, Serra/ES.</p>
+  <p>Telefone: (27) 98138-2565</p>
+  <p>Redes Sociais:
+    <a href="https://www.instagram.com/elementosmateriais" target="_blank" style="color: white; text-decoration: underline;">Instagram @elementosmateriais</a>,
+    <a href="https://www.facebook.com/elementosmateriais" target="_blank" style="color: white; text-decoration: underline;">Facebook @elementosmateriais</a>
+  </p>
+</footer>
 </body>
 </html>
