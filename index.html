@@ -4,6 +4,7 @@
     <meta charset="utf-8"/>
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
     <title>Loja de Materiais</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
         header { background: #556B2F; padding: 10px 20px; color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; }
@@ -12,335 +13,396 @@
         nav { background: #6B8E23; padding: 10px; text-align: center; }
         nav a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; cursor: pointer; }
         .search-bar { padding: 20px; text-align: center; }
-        .search-bar input { width: 50%; padding: 10px; font-size: 16px; }
+        .search-bar input { width: 50%; padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px; }
         .filters { text-align: center; margin-bottom: 20px; }
-        .filters select { padding: 10px; font-size: 16px; margin: 0 10px; }
-
-        /* Ajustes para alinhar produtos lado a lado e preencher a tela */
+        .filters select { padding: 10px; font-size: 16px; margin: 0 10px; border: 1px solid #ddd; border-radius: 5px; }
         .products-grid {
             display: flex;
-            flex-wrap: wrap; /* Permite que os itens quebrem para a próxima linha */
-            gap: 15px; /* Espaçamento reduzido entre os cartões */
-            justify-content: center; /* Centraliza os cartões na linha */
-            padding: 15px; /* Padding reduzido para a grade */
-            align-items: flex-start; /* Alinha os itens ao topo na linha */
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            justify-content: center;
         }
         .product-card {
             background: white;
-            padding: 10px; /* Padding reduzido */
             border: 1px solid #ddd;
             border-radius: 8px;
+            padding: 15px;
             text-align: center;
-            /* Largura flexível para 4-5 itens por linha em telas maiores */
-            flex: 1 1 calc(20% - 15px); /* Ajuste para ~5 itens, subtraindo o gap */
-            max-width: 180px; /* Limite máximo para o tamanho do cartão */
-            min-width: 140px; /* Largura mínima para evitar que fiquem muito pequenos */
-            box-sizing: border-box; /* Garante que padding e border sejam incluídos na largura */
+            width: 200px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative; /* Para o tooltip */
+            display: none; /* Escondido por padrão, visibilidade controlada pelo JS */
         }
-        /* Media query para telas menores - 3 itens por linha */
-        @media (max-width: 1024px) {
-            .product-card {
-                flex: 1 1 calc(33.33% - 15px);
-            }
-        }
-        /* Media query para telas médias - 2 itens por linha */
-        @media (max-width: 768px) {
-            .product-card {
-                flex: 1 1 calc(50% - 15px);
-            }
-        }
-        /* Media query para telas muito pequenas - 1 item por linha */
-        @media (max-width: 480px) {
-            .product-card {
-                flex: 1 1 calc(100% - 15px);
-            }
-        }
-
-
         .product-card img {
-            width: 100px; /* Tamanho reduzido da imagem */
-            height: 100px; /* Tamanho reduzido da imagem */
-            object-fit: contain;
-            margin-bottom: 5px;
+            max-width: 100%;
+            height: 150px; /* Altura fixa para as imagens */
+            object-fit: cover; /* Garante que a imagem preencha o espaço sem distorcer */
+            border-radius: 5px;
+            margin-bottom: 10px;
         }
         .product-card h3 {
-            font-size: 14px; /* Tamanho reduzido da fonte */
-            margin: 8px 0 4px;
+            font-size: 1.2em;
+            margin: 10px 0;
+            min-height: 2.4em; /* Garante que o título não "salte" com 1 ou 2 linhas */
         }
         .product-card p {
-            color: #006400;
+            font-size: 1.1em;
+            color: #556B2F;
             font-weight: bold;
-            font-size: 13px; /* Tamanho reduzido da fonte */
+            margin-bottom: 10px;
         }
         .product-card input[type="number"] {
-            width: 40px; /* Tamanho reduzido do campo de quantidade */
-            padding: 3px;
-            margin-top: 8px;
-            font-size: 13px;
+            width: 60px;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
         }
         .product-card button {
-            margin-top: 8px;
-            padding: 5px 8px; /* Padding reduzido do botão */
             background: #6B8E23;
             color: white;
             border: none;
-            cursor: pointer;
-            border-radius: 4px;
-            font-size: 12px; /* Tamanho reduzido da fonte do botão */
-        }
-        .cart { padding: 20px; }
-        .cart ul { list-style-type: none; padding: 0; }
-        .cart li { margin-bottom: 10px; }
-        footer {
-            background: #6B8E23;
-            color: white;
-            text-align: center;
-            padding: 20px;
-            margin-top: 30px;
-        }
-        .section { display: none; padding: 20px; }
-        .section.active { display: block; } /* Usado para a seção inicial */
-
-        /* Pagination Styles */
-        .pagination {
-            text-align: center;
-            margin-top: 20px;
-            width: 100%; /* Ensure pagination spans the full width of the grid */
-            order: 99; /* Push pagination to the end in a flex container */
-        }
-        .pagination button {
-            background-color: #6B8E23;
-            color: white;
-            padding: 8px 12px; /* Padding reduzido */
-            border: none;
+            padding: 10px 15px;
             border-radius: 5px;
             cursor: pointer;
-            margin: 0 3px; /* Margem reduzida */
-            font-size: 14px; /* Tamanho reduzido da fonte */
+            font-size: 1em;
         }
-        .pagination button:hover:not(.active) {
-            background-color: #556B2F;
+        .product-card button:hover {
+            background: #556B2F;
         }
-        .pagination button.active {
-            background-color: #556B2F;
+        .cart-panel, .admin-panel, .login-panel {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .cart-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+        .cart-total {
+            text-align: right;
+            padding: 15px 0;
+            font-size: 1.2em;
             font-weight: bold;
         }
-
-        /* Magnifying Glass (Tooltip) Effect */
+        .admin-panel input, .admin-panel button, .admin-panel select {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .admin-panel button {
+            background: #6B8E23;
+            color: white;
+            cursor: pointer;
+        }
+        .admin-panel button:hover {
+            background: #556B2F;
+        }
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .admin-table th, .admin-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .admin-table th {
+            background-color: #f2f2f2;
+        }
+        .admin-table img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 5px;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .pagination button {
+            background: #6B8E23;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .pagination button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .pagination span {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
         .tooltip {
             position: relative;
             display: inline-block;
-            cursor: pointer; /* Indicate it's clickable/hoverable */
         }
-
-        .tooltip .tooltip-img {
+        .tooltip-img {
             visibility: hidden;
-            width: 150px; /* Tamanho reduzido do tooltip da imagem */
-            background-color: white;
-            border: 1px solid #ccc;
-            padding: 5px;
-            border-radius: 5px;
+            width: 150px;
+            background-color: transparent;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
             position: absolute;
-            z-index: 10;
-            bottom: 125%; /* Position above the element */
+            z-index: 1;
+            bottom: 100%; /* Acima da imagem */
             left: 50%;
-            transform: translateX(-50%); /* Center the tooltip horizontally */
+            margin-left: -75px; /* Centralizar */
             opacity: 0;
-            transition: opacity 0.3s, visibility 0s linear 0.3s; /* Delay visibility change */
+            transition: opacity 0.3s;
         }
-
         .tooltip:hover .tooltip-img {
             visibility: visible;
             opacity: 1;
-            transition-delay: 0s; /* Show immediately on hover */
         }
-
-        .tooltip .tooltip-img img {
+        .tooltip-img img {
             width: 100%;
             height: auto;
             display: block;
         }
-
-        /* Estilos para o painel de login/admin */
-        #admin-login, #admin-panel {
+        .modal {
+            display: none;
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
             z-index: 1000;
-            max-width: 90%; /* Ajuste para responsividade */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
         }
-        #admin-login input, #admin-panel input, #admin-panel select, #admin-panel button {
-            margin-bottom: 10px;
-            width: calc(100% - 20px); /* Ajuste para padding */
-            padding: 8px;
-            box-sizing: border-box; /* Inclui padding e border na largura */
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+            text-align: center;
         }
-        #admin-panel button {
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #login-form input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #login-form button {
             background: #6B8E23;
             color: white;
             border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
             cursor: pointer;
-            border-radius: 4px;
+            font-size: 1em;
         }
-        #admin-panel button:hover {
+        #login-form button:hover {
             background: #556B2F;
         }
     </style>
-    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
     <header>
-        <h2 style="margin: 0; font-size: 22px;">Catálogo</h2>
-        <h1 style="font-size: 48px;">Elementos Materiais</h1>
+        <img alt="Logo da Empresa" class="logo" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7d2Yg-G4b2v8mX7rD-4fQx5yFf5sX8q6b_w&s">
+        <h1>Elementos Materiais de Construção</h1>
     </header>
+
     <nav>
         <a href="#" onclick="mostrarPainel('produtos')">Produtos</a>
         <a href="#" onclick="mostrarPainel('ofertas')">Ofertas</a>
         <a href="#" onclick="mostrarPainel('carrinho')">Carrinho</a>
-        <a href="#" onclick="mostrarPainel('admin')">Admin</a>
+        <a href="#" onclick="mostrarPainel('painel-admin')">Admin</a>
     </nav>
+
     <div class="search-bar">
-        <input id="search" onkeyup="searchProducts()" placeholder="Buscar produtos..." type="text"/>
+        <input type="text" id="search" placeholder="Buscar produtos..." onkeyup="searchProducts()">
     </div>
+
     <div class="filters">
-        <label>Ordenar por:
-            <select onchange="sortProducts(this.value)">
-                <option value="nome">Nome (A-Z)</option>
-                <option value="menor">Menor Valor</option>
-                <option value="maior">Maior Valor</option>
-            </select>
-        </label>
+        <label for="sort">Ordenar por:</label>
+        <select id="sort" onchange="sortProducts(this.value)">
+            <option value="nome">Nome</option>
+            <option value="menor">Preço (Menor para Maior)</option>
+            <option value="maior">Preço (Maior para Menor)</option>
+        </select>
     </div>
 
-    <div id="admin-login" style="display: none;">
-        <p>Senha de Administrador:</p>
-        <input id="admin-pass" type="password"/>
-        <button id="entrar-admin">Entrar</button>
-        <button onclick="fecharPainelLogin()">Fechar</button>
-    </div>
-    <div id="admin-panel" style="display: none;">
-        <h3>Painel Admin</h3>
-        <h4>Adicionar Produto</h4>
-        <input id="nome-prod" placeholder="Nome" type="text"/><br/>
-        <input id="valor-prod" placeholder="Valor" type="number"/><br/>
-        <input id="img-prod" placeholder="URL da Imagem" type="text"/><br/>
-        <select id="menu-prod">
-            <option value="produtos">Produtos</option>
-            <option value="ofertas">Ofertas</option>
-        </select><br/>
-        <button onclick="adicionarProduto()">Adicionar Produto</button>
-        <h4>Remover Produto</h4>
-        <input id="nome-remover" placeholder="Nome do Produto" type="text"/>
-        <button onclick="removerProduto()">Remover</button>
-        <h4>Adicionar em Massa</h4>
-        <input accept=".xlsx" id="excel-upload" type="file"/>
-        <button onclick="carregarPlanilha()">Enviar Planilha</button>
-        <h4>Exportar</h4>
-        <button onclick="baixarHTML()">Salvar HTML Modificado</button>
-        <button onclick="fecharPainel()">Fechar Painel Admin</button>
-        <button onclick="removerTodosProdutos()">Remover Todos os Produtos</button>
-        <h4 style="text-align:center; font-weight: bold;">Catálogo</h4>
-    </div>
-
-    <section class="section products-grid" id="produtos">
+    <section id="produtos" class="section active">
+        <div class="products-grid"></div>
         <div class="pagination" id="pagination-produtos"></div>
     </section>
-    <section class="section products-grid" id="ofertas">
+
+    <section id="ofertas" class="section" style="display: none;">
+        <div class="products-grid"></div>
         <div class="pagination" id="pagination-ofertas"></div>
     </section>
 
-    <section class="section cart" id="carrinho">
-        <h2>Seu Carrinho</h2>
-        <textarea id="obs-cliente" placeholder="Observações adicionais..." rows="4" style="width:100%; margin-top:10px;"></textarea>
-        <table id="cart-list">
-            <thead>
-                <tr>
-                    <th>Imagem</th>
-                    <th>Produto</th>
-                    <th>Valor Unitário</th>
-                    <th>Quantidade</th>
-                    <th>Subtotal</th>
-                    <th>Ações</th>
-                </tr>
-            </thead>
-            <tbody></tbody>
-        </table>
-        <p id="cart-total" style="font-weight: bold; margin-top: 10px;">Total: R$ 0.00</p>
-        <button class="botao" onclick="enviarPedido()">Enviar pedido para WhatsApp</button>
-        <p><em>Você pode solicitar o pagamento por <strong>PIX</strong>, receber um <strong>link de pagamento</strong> ou negociar pelo WhatsApp.</em></p>
+    <section id="carrinho" class="section" style="display: none;">
+        <div class="cart-panel">
+            <h2>Meu Carrinho</h2>
+            <div id="cart-items"></div>
+            <div class="cart-total" id="cart-total"></div>
+            <button onclick="checkout()">Finalizar Compra</button>
+        </div>
     </section>
 
-    <script>
-        // Carrinho e produtos persistentes
-        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || [];
-        let produtosSalvos = JSON.parse(localStorage.getItem('produtosSalvos')) || [];
+    <section id="painel-admin" class="section" style="display: none;">
+        <div class="admin-panel">
+            <h2>Painel de Administração</h2>
+            <h3>Adicionar/Editar Produto</h3>
+            <input type="hidden" id="product-id">
+            <input type="text" id="product-name" placeholder="Nome do Produto">
+            <input type="number" id="product-price" placeholder="Preço" step="0.01">
+            <input type="text" id="product-image" placeholder="URL da Imagem">
+            <select id="product-menu">
+                <option value="produtos">Produtos</option>
+                <option value="ofertas">Ofertas</option>
+            </select>
+            <button onclick="addProduct()">Salvar Produto</button>
+            <button onclick="clearForm()">Limpar Formulário</button>
 
-        // Pagination variables
+            <h3>Importar Produtos (Excel)</h3>
+            <input type="file" id="excel-file" accept=".xlsx, .xls">
+            <button onclick="importExcel()">Importar</button>
+
+            <h3>Lista de Produtos Cadastrados</h3>
+            <table class="admin-table">
+                <thead>
+                    <tr>
+                        <th>Imagem</th>
+                        <th>Nome</th>
+                        <th>Preço</th>
+                        <th>Menu</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-product-list">
+                    </tbody>
+            </table>
+            <button onclick="exportExcel()">Exportar para Excel</button>
+            <button onclick="deleteAllProducts()">Deletar Todos os Produtos</button>
+        </div>
+    </section>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeLoginModal()">×</span>
+            <h2>Login de Administrador</h2>
+            <form id="login-form">
+                <input type="text" id="username" placeholder="Usuário" required>
+                <input type="password" id="password" placeholder="Senha" required>
+                <button type="submit">Entrar</button>
+            </form>
+            <p id="login-message" style="color: red; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <footer style="background: #556B2F; color: white; text-align: center; padding: 20px; margin-top: 30px;">
+        <p>Endereço: Avenida Brasília, 57, Serra Dourada 2, Serra/ES.</p>
+        <p>Telefone: (27) 98138-2565</p>
+        <p>Redes Sociais:
+            <a href="https://www.instagram.com/elementosmateriais" target="_blank" style="color: white; text-decoration: underline;">Instagram @elementosmateriais</a>,
+            <a href="https://www.facebook.com/elementosmateriais" target="_blank" style="color: white; text-decoration: underline;">Facebook/elementosmateriais</a>
+        </p>
+        <p>© 2024 Elementos Materiais de Construção. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        // Variáveis globais para controle de paginação e estado
         const productsPerPage = 10;
         let currentPage = {
-            produtos: 1,
-            ofertas: 1
+            'produtos': 1,
+            'ofertas': 1
         };
+        let produtosSalvos = JSON.parse(localStorage.getItem('produtosSalvos')) || [];
+        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || {};
+        const adminUser = "admin";
+        const adminPass = "admin123";
 
-        function salvarProduto(nome, preco, imagem, menu) {
-            produtosSalvos.push({ nome, preco, imagem, menu });
-            localStorage.setItem('produtosSalvos', JSON.stringify(produtosSalvos));
-        }
-
-        function carregarProdutosSalvos() {
-            // Limpa os produtos existentes e re-adiciona o div de paginação para garantir que ele esteja lá
-            document.getElementById("produtos").innerHTML = '<div class="pagination" id="pagination-produtos"></div>';
-            document.getElementById("ofertas").innerHTML = '<div class="pagination" id="pagination-ofertas"></div>';
-
-            // Adiciona todos os produtos aos seus respectivos containers (visibilidade controlada por renderProductsPage)
-            produtosSalvos.forEach(p => {
-                const container = document.getElementById(p.menu);
-                if (!container) return;
-
-                const idSanitizado = 'qtd-' + p.nome.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
-                const card = document.createElement("div");
-                card.className = "product-card";
-                card.dataset.nome = p.nome;
-                card.dataset.preco = p.preco;
-                card.dataset.menu = p.menu;
-                card.innerHTML = `
-                    <div class="tooltip">
-                        <img src="${p.imagem || 'https://via.placeholder.com/100'}" alt="${p.nome}">
-                        <span class="tooltip-img"><img src="${p.imagem || 'https://via.placeholder.com/150'}" alt="${p.nome} - Ampliado"></span>
-                    </div>
-                    <h3>${p.nome}</h3>
-                    <p>R$ ${p.preco.toFixed(2)}</p>
-                    <input type="number" min="1" value="1" id="${idSanitizado}">
-                    <button onclick="addToCart('${p.nome}', ${p.preco}, '${idSanitizado}', '${p.imagem}')">Adicionar ao Carrinho</button>
-                `;
-                // Insere o cartão antes do div de paginação
-                container.insertBefore(card, container.querySelector('.pagination'));
+        // Funções para mostrar e esconder painéis
+        function mostrarPainel(id) {
+            document.querySelectorAll('section.section').forEach(sec => {
+                sec.style.display = 'none';
+                sec.classList.remove('active');
             });
-            // Renderiza os produtos para a seção ativa inicialmente
-            const activeSection = document.querySelector('.section.active');
-            if (activeSection) {
-                renderProductsPage(activeSection.id);
+            const targetPanel = document.getElementById(id);
+            if (targetPanel) {
+                targetPanel.style.display = 'block';
+                targetPanel.classList.add('active');
+
+                if (id === 'painel-admin') {
+                    if (!checkLogin()) {
+                        openLoginModal();
+                        return;
+                    }
+                    renderAdminProducts();
+                } else if (id === 'carrinho') {
+                    renderCart();
+                } else {
+                    // Para 'produtos' e 'ofertas', garantir que renderProductsPage seja chamada com o ID correto
+                    renderProductsPage(id);
+                }
             }
         }
 
-        // Função para renderizar produtos para uma página específica
+        // --- Funções de Paginação ---
         function renderProductsPage(sectionId) {
             const container = document.getElementById(sectionId);
-            if (!container) return;
+            const productsGrid = container ? container.querySelector('.products-grid') : null;
+            if (!container || !productsGrid) return; // Garante que os elementos existem
 
             // Pega todos os cartões de produtos que pertencem a esta seção
+            // Garante que allProductCards seja um array mesmo que querySelectorAll retorne vazio
             const allProductCards = Array.from(container.querySelectorAll('.product-card')).filter(card => card.dataset.menu === sectionId);
 
             // Filtra os produtos com base na busca (se houver)
             const searchValue = document.getElementById('search').value.toLowerCase();
             let productsToPaginate = allProductCards.filter(card => {
-                const productName = card.dataset.nome.toLowerCase();
+                const productName = card.dataset.nome ? card.dataset.nome.toLowerCase() : '';
                 return productName.includes(searchValue);
             });
 
@@ -360,326 +422,190 @@
             setupPagination(sectionId, productsToPaginate.length);
         }
 
-        // Função para configurar os botões de paginação
         function setupPagination(sectionId, totalProducts) {
-            const paginationContainer = document.getElementById(`pagination-${sectionId}`);
-            if (!paginationContainer) return;
-
-            paginationContainer.innerHTML = ''; // Limpa os botões de paginação anteriores
+            const paginationDiv = document.getElementById(`pagination-${sectionId}`);
+            if (!paginationDiv) return;
 
             const totalPages = Math.ceil(totalProducts / productsPerPage);
+            paginationDiv.innerHTML = ''; // Limpa a paginação existente
 
-            // Esconde a paginação se houver apenas uma página ou nenhum produto
-            if (totalPages <= 1) {
-                paginationContainer.style.display = 'none';
-                return;
-            } else {
-                paginationContainer.style.display = 'block';
-            }
-
-            // Botão Anterior
-            const prevButton = document.createElement('button');
-            prevButton.innerText = 'Anterior';
-            prevButton.disabled = currentPage[sectionId] === 1;
-            prevButton.onclick = () => {
-                currentPage[sectionId]--;
-                renderProductsPage(sectionId);
-            };
-            paginationContainer.appendChild(prevButton);
-
-            // Números das páginas
-            for (let i = 1; i <= totalPages; i++) {
-                const pageButton = document.createElement('button');
-                pageButton.innerText = i;
-                pageButton.classList.add('page-number');
-                if (i === currentPage[sectionId]) {
-                    pageButton.classList.add('active');
-                }
-                pageButton.onclick = () => {
-                    currentPage[sectionId] = i;
+            if (totalPages > 1) {
+                // Botão Anterior
+                const prevButton = document.createElement('button');
+                prevButton.textContent = 'Anterior';
+                prevButton.disabled = currentPage[sectionId] === 1;
+                prevButton.onclick = () => {
+                    currentPage[sectionId]--;
                     renderProductsPage(sectionId);
                 };
-                paginationContainer.appendChild(pageButton);
-            }
+                paginationDiv.appendChild(prevButton);
 
-            // Botão Próximo
-            const nextButton = document.createElement('button');
-            nextButton.innerText = 'Próximo';
-            nextButton.disabled = currentPage[sectionId] === totalPages || totalPages === 0;
-            nextButton.onclick = () => {
-                currentPage[sectionId]++;
-                renderProductsPage(sectionId);
-            };
-            paginationContainer.appendChild(nextButton);
+                // Números das páginas
+                for (let i = 1; i <= totalPages; i++) {
+                    const pageButton = document.createElement('button');
+                    pageButton.textContent = i;
+                    if (i === currentPage[sectionId]) {
+                        pageButton.style.backgroundColor = '#556B2F';
+                    }
+                    pageButton.onclick = () => {
+                        currentPage[sectionId] = i;
+                        renderProductsPage(sectionId);
+                    };
+                    paginationDiv.appendChild(pageButton);
+                }
+
+                // Botão Próximo
+                const nextButton = document.createElement('button');
+                nextButton.textContent = 'Próximo';
+                nextButton.disabled = currentPage[sectionId] === totalPages;
+                nextButton.onclick = () => {
+                    currentPage[sectionId]++;
+                    renderProductsPage(sectionId);
+                };
+                paginationDiv.appendChild(nextButton);
+            }
         }
 
-        function addToCart(nome, preco, inputId, imagem = '') {
-            const qtd = parseInt(document.getElementById(inputId).value) || 1;
-            const existente = carrinho.find(item => item.nome === nome);
-            if (existente) {
-                existente.qtd += qtd;
-            } else {
-                carrinho.push({ nome, preco, qtd, imagem });
-            }
-            updateCart();
-            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        // --- Funções de Carregamento e Salvação ---
+        function salvarProdutos() {
+            localStorage.setItem('produtosSalvos', JSON.stringify(produtosSalvos));
         }
 
-        function updateCart() {
-            const tbody = document.querySelector('#cart-list tbody');
-            const totalElem = document.getElementById('cart-total');
-            tbody.innerHTML = '';
-            let total = 0;
+        function carregarProdutosSalvos() {
+            // Limpa os produtos existentes e re-adiciona o div de paginação para garantir que ele esteja lá
+            document.getElementById("produtos").innerHTML = '<div class="products-grid"></div><div class="pagination" id="pagination-produtos"></div>';
+            document.getElementById("ofertas").innerHTML = '<div class="products-grid"></div><div class="pagination" id="pagination-ofertas"></div>';
 
-            carrinho.forEach((item, index) => {
-                const subtotal = item.preco * item.qtd;
-                total += subtotal;
-                const tr = document.createElement('tr');
+            // Adiciona todos os produtos aos seus respectivos containers (visibilidade controlada por renderProductsPage)
+            produtosSalvos.forEach(p => {
+                const container = document.getElementById(p.menu);
+                const productsGrid = container ? container.querySelector('.products-grid') : null;
+                if (!container || !productsGrid) return; // Garante que os elementos existem
 
-                tr.innerHTML = `
-                    <td><img src="${item.imagem || 'https://via.placeholder.com/50'}" width="50" alt="${item.nome}"></td>
-                    <td>${item.nome}</td>
-                    <td>R$ ${item.preco.toFixed(2)}</td>
-                    <td>
-                        <button onclick="alterarQtd(${index}, -1)">-</button>
-                        ${item.qtd}
-                        <button onclick="alterarQtd(${index}, 1)">+</button>
-                    </td>
-                    <td>R$ ${subtotal.toFixed(2)}</td>
-                    <td><button onclick="removerItem(${index})">Remover</button></td>
+                const idSanitizado = 'qtd-' + p.nome.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                const card = document.createElement("div");
+                card.className = "product-card";
+                card.dataset.nome = p.nome;
+                card.dataset.preco = p.preco;
+                card.dataset.menu = p.menu;
+                card.innerHTML = `
+                    <div class="tooltip">
+                        <img src="${p.imagem || 'https://via.placeholder.com/150'}" alt="${p.nome}">
+                        <span class="tooltip-img"><img src="${p.imagem || 'https://via.placeholder.com/250'}" alt="${p.nome} - Ampliado"></span>
+                    </div>
+                    <h3>${p.nome}</h3>
+                    <p>R$ ${p.preco.toFixed(2)}</p>
+                    <input type="number" min="1" value="1" id="${idSanitizado}">
+                    <button onclick="addToCart('${p.nome}', ${p.preco}, '${idSanitizado}', '${p.imagem}')">Adicionar ao Carrinho</button>
                 `;
-                tbody.appendChild(tr);
+                productsGrid.appendChild(card); // Adiciona ao products-grid, não antes da paginação
             });
 
-            totalElem.innerText = `Total: R$ ${total.toFixed(2)}`;
+            // Renderiza os produtos para a seção ativa inicialmente
+            const activeSection = document.querySelector('.section.active');
+            if (activeSection) {
+                renderProductsPage(activeSection.id);
+            }
+        }
+
+        // --- Funções do Carrinho ---
+        function addToCart(nome, preco, idQtd, imagem) {
+            const qtdInput = document.getElementById(idQtd);
+            const quantidade = parseInt(qtdInput.value);
+
+            if (quantidade > 0) {
+                if (carrinho[nome]) {
+                    carrinho[nome].quantidade += quantidade;
+                } else {
+                    carrinho[nome] = {
+                        preco: preco,
+                        quantidade: quantidade,
+                        imagem: imagem
+                    };
+                }
+                localStorage.setItem('carrinho', JSON.stringify(carrinho));
+                alert(`${quantidade} ${nome}(s) adicionado(s) ao carrinho!`);
+                renderCart(); // Atualiza a visualização do carrinho
+            } else {
+                alert("Por favor, insira uma quantidade válida.");
+            }
+        }
+
+        function renderCart() {
+            const cartItemsDiv = document.getElementById('cart-items');
+            const cartTotalDiv = document.getElementById('cart-total');
+            cartItemsDiv.innerHTML = '';
+            let total = 0;
+
+            for (const nome in carrinho) {
+                const item = carrinho[nome];
+                const itemTotal = item.preco * item.quantidade;
+                total += itemTotal;
+
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'cart-item';
+                itemDiv.innerHTML = `
+                    <span><img src="${item.imagem || 'https://via.placeholder.com/50'}" alt="${nome}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; margin-right: 10px;"> ${nome} (x${item.quantidade}) - R$ ${item.preco.toFixed(2)}</span>
+                    <span>R$ ${itemTotal.toFixed(2)}</span>
+                    <button onclick="removeFromCart('${nome}')" style="background-color: #dc3545;">Remover</button>
+                `;
+                cartItemsDiv.appendChild(itemDiv);
+            }
+            cartTotalDiv.textContent = `Total: R$ ${total.toFixed(2)}`;
             localStorage.setItem('carrinho', JSON.stringify(carrinho));
         }
 
-        function alterarQtd(index, delta) {
-            carrinho[index].qtd += delta;
-            if (carrinho[index].qtd <= 0) carrinho.splice(index, 1);
-            updateCart();
+        function removeFromCart(nome) {
+            if (carrinho[nome]) {
+                delete carrinho[nome];
+                renderCart();
+            }
         }
 
-        function removerItem(index) {
-            carrinho.splice(index, 1);
-            updateCart();
-        }
-
-        function enviarPedido() {
-            if (carrinho.length === 0) {
+        function checkout() {
+            if (Object.keys(carrinho).length === 0) {
                 alert("Seu carrinho está vazio!");
                 return;
             }
-
-            let mensagem = "Olá, gostaria de fazer o seguinte pedido:%0A";
-            let total = 0;
-            carrinho.forEach(p => {
-                const subtotal = p.preco * p.qtd;
-                total += subtotal;
-                mensagem += `- ${p.nome} x${p.qtd} (R$ ${p.preco.toFixed(2)} cada) = R$ ${subtotal.toFixed(2)}%0A`;
-            });
-            mensagem += `%0ATotal: R$ ${total.toFixed(2)}%0A`;
-            mensagem += `%0APrefiro pagar por PIX, link de pagamento ou negociar por aqui.`;
-
-            const obs = document.getElementById('obs-cliente').value;
-            if (obs.trim()) {
-                mensagem += `%0AObservações: ${encodeURIComponent(obs)}`;
-            }
-
-            const numero = "5527981382565";
-            const url = `https://wa.me/${numero}?text=${mensagem}`;
-            window.open(url, '_blank');
+            alert("Compra finalizada! Total: R$ " + parseFloat(document.getElementById('cart-total').textContent.replace('Total: R$ ', '')).toFixed(2));
+            carrinho = {};
+            localStorage.removeItem('carrinho');
+            renderCart();
+            // Aqui você pode adicionar a lógica de envio de dados para um servidor, e-mail, etc.
         }
 
-        function adicionarProduto() {
-            const nome = document.getElementById("nome-prod").value;
-            const preco = parseFloat(document.getElementById("valor-prod").value);
-            const img = document.getElementById("img-prod").value;
-            const menu = document.getElementById("menu-prod").value;
-
-            if (!nome || isNaN(preco) || preco <= 0 || !img) {
-                alert("Por favor, preencha todos os campos do produto corretamente.");
-                return;
-            }
-
-            salvarProduto(nome, preco, img, menu);
-
-            document.getElementById("nome-prod").value = '';
-            document.getElementById("valor-prod").value = '';
-            document.getElementById("img-prod").value = '';
-
-            carregarProdutosSalvos();
-            alert("Produto adicionado com sucesso!");
-        }
-
-        function removerProduto() {
-            const nomeRemover = document.getElementById("nome-remover").value.toLowerCase();
-            const initialLength = produtosSalvos.length;
-            produtosSalvos = produtosSalvos.filter(p => p.nome.toLowerCase() !== nomeRemover);
-            localStorage.setItem('produtosSalvos', JSON.stringify(produtosSalvos));
-
-            if (produtosSalvos.length < initialLength) {
-                alert(`Produto "${nomeRemover}" removido com sucesso!`);
-                document.getElementById("nome-remover").value = '';
-                carregarProdutosSalvos();
-            } else {
-                alert(`Produto "${nomeRemover}" não encontrado.`);
-            }
-        }
-
-        function carregarPlanilha() {
-            const file = document.getElementById("excel-upload").files[0];
-            if (!file) return alert("Selecione um arquivo");
-
-            const extrairId = (link) => {
-                const match = link.match(/\/d\/([\w-]+)/);
-                return match ? match[1] : "";
-            };
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: "array" });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const rows = XLSX.utils.sheet_to_json(sheet);
-                let productsAdded = 0;
-                rows.forEach(row => {
-                    const nome = row.nome || row.Nome;
-                    const preco = parseFloat(row.valor || row.Valor);
-                    const linkImagem = row.imagem || row.imagem_id || row.link || "";
-                    const imagemId = extrairId(linkImagem);
-                    const img = imagemId ? `https://drive.google.com/uc?export=view&id=${imagemId}` : linkImagem;
-                    const menu = (row.menu || row.Menu || "produtos").toLowerCase();
-
-                    if (nome && !isNaN(preco) && preco > 0 && img) {
-                        salvarProduto(nome, preco, img, menu);
-                        productsAdded++;
-                    }
-                });
-                alert(`${productsAdded} produtos importados com sucesso!`);
-                document.getElementById("excel-upload").value = '';
-                carregarProdutosSalvos();
-            };
-            reader.readAsArrayBuffer(file);
-        }
-
-        function removerTodosProdutos() {
-            if (confirm("Tem certeza que deseja remover TODOS os produtos? Esta ação não pode ser desfeita.")) {
-                localStorage.removeItem('produtosSalvos');
-                produtosSalvos = [];
-                document.getElementById("produtos").innerHTML = '<div class="pagination" id="pagination-produtos"></div>';
-                document.getElementById("ofertas").innerHTML = '<div class="pagination" id="pagination-ofertas"></div>';
-                alert("Todos os produtos foram removidos!");
-                renderProductsPage('produtos');
-                renderProductsPage('ofertas');
-            }
-        }
-
-        function baixarHTML() {
-            const loginPanel = document.getElementById("admin-login");
-            const adminPanel = document.getElementById("admin-panel");
-
-            const originalLoginDisplay = loginPanel.style.display;
-            const originalAdminDisplay = adminPanel.style.display;
-
-            loginPanel.style.display = "none";
-            adminPanel.style.display = "none";
-
-            setTimeout(() => {
-                const docClone = document.documentElement.cloneNode(true);
-                const doctype = "<!DOCTYPE html>";
-                const htmlString = doctype + "\n" + docClone.outerHTML;
-                const blob = new Blob([htmlString], { type: "text/html" });
-                const link = document.createElement("a");
-                link.href = URL.createObjectURL(blob);
-                link.download = "loja_modificada.html";
-                link.click();
-
-                loginPanel.style.display = originalLoginDisplay;
-                adminPanel.style.display = originalAdminDisplay;
-            }, 100);
-        }
-
-        // Função principal para mostrar/esconder painéis
-        function mostrarPainel(id) {
-            // Esconde todas as seções principais e os painéis de admin
-            document.querySelectorAll('section').forEach(sec => sec.style.display = 'none');
-            document.getElementById('admin-login').style.display = 'none';
-            document.getElementById('admin-panel').style.display = 'none';
-
-            if (id === 'admin') {
-                // Se o clique foi no botão 'Admin', mostra o painel de login
-                document.getElementById('admin-login').style.display = 'block';
-                document.getElementById('admin-pass').value = ''; // Limpa a senha
-            } else {
-                // Para as outras seções (produtos, ofertas, carrinho), mostra a seção correspondente
-                const targetElement = document.getElementById(id);
-                if (targetElement) {
-                    targetElement.style.display = 'block';
-                    if (id === 'produtos' || id === 'ofertas') {
-                        currentPage[id] = 1; // Reseta a página para 1 ao mudar de seção de produtos
-                        renderProductsPage(id);
-                    }
-                }
-            }
-        }
-
-        function fecharPainelLogin() {
-            document.getElementById('admin-login').style.display = 'none';
-            mostrarPainel('produtos'); // Volta para a tela de produtos
-        }
-
-        function fecharPainel() { // Função para fechar o painel ADMIN em si
-            document.getElementById("admin-panel").style.display = "none";
-            document.getElementById('admin-pass').value = ''; // Limpa a senha
-            mostrarPainel('produtos'); // Volta para a tela de produtos
-        }
-
-
-        window.onload = function() {
-            carregarProdutosSalvos();
-            updateCart();
-            mostrarPainel('produtos'); // Garante que a seção de produtos seja a primeira a ser exibida
-
-            // Lógica para o botão de "Entrar" do painel de login
-            document.getElementById("entrar-admin").addEventListener("click", () => {
-                const senha = document.getElementById("admin-pass").value;
-                if (senha === "Elementos2025") {
-                    document.getElementById("admin-login").style.display = "none";
-                    document.getElementById("admin-panel").style.display = "block"; // Mostra o painel admin
-                } else {
-                    alert("Senha incorreta!");
-                    document.getElementById("admin-pass").value = ""; // Limpa a senha para nova tentativa
-                }
-            });
-        };
-
+        // --- Funções de Busca e Ordenação ---
         function searchProducts() {
-            const searchValue = document.getElementById('search').value.toLowerCase();
-            const activeSectionId = document.querySelector('.section.active').id;
-            
-            // Re-renderiza a página ativa para aplicar o filtro de busca
-            currentPage[activeSectionId] = 1; // Volta para a primeira página ao fazer uma nova busca
-            renderProductsPage(activeSectionId);
+            const activeSection = document.querySelector('.section.active');
+            if (activeSection) {
+                currentPage[activeSection.id] = 1; // Reseta a página para a primeira ao buscar
+                renderProductsPage(activeSection.id);
+            }
         }
 
         function sortProducts(criteria) {
-            const activeSectionId = document.querySelector('.section.active').id;
-            const currentContainer = document.getElementById(activeSectionId);
+            const activeSection = document.querySelector('.section.active');
+            if (!activeSection) return;
 
-            if (!currentContainer) return;
+            const activeSectionId = activeSection.id;
+            const container = document.getElementById(activeSectionId);
+            const productsGrid = container ? container.querySelector('.products-grid') : null;
+            if (!container || !productsGrid) return;
 
-            // Pega apenas os cards que pertencem à seção atual
-            let cards = Array.from(currentContainer.querySelectorAll('.product-card')).filter(card => card.dataset.menu === activeSectionId);
+            let cards = Array.from(productsGrid.querySelectorAll('.product-card'));
 
-            cards.forEach(card => card.remove()); // Remove temporariamente do DOM
+            // Filtra os produtos com base na busca antes de ordenar
+            const searchValue = document.getElementById('search').value.toLowerCase();
+            cards = cards.filter(card => {
+                const productName = card.dataset.nome ? card.dataset.nome.toLowerCase() : '';
+                return productName.includes(searchValue);
+            });
 
             cards.sort((a, b) => {
-                const nameA = a.dataset.nome.toLowerCase();
-                const nameB = b.dataset.nome.toLowerCase();
-                const priceA = parseFloat(a.dataset.preco);
-                const priceB = parseFloat(b.dataset.preco);
+                const nameA = a.dataset.nome ? a.dataset.nome.toLowerCase() : '';
+                const nameB = b.dataset.nome ? b.dataset.nome.toLowerCase() : '';
+                const priceA = parseFloat(a.dataset.preco || 0);
+                const priceB = parseFloat(b.dataset.preco || 0);
 
                 if (criteria === 'nome') {
                     return nameA.localeCompare(nameB);
@@ -691,21 +617,185 @@
                 return 0;
             });
 
-            const paginationDiv = currentContainer.querySelector('.pagination');
-            cards.forEach(card => currentContainer.insertBefore(card, paginationDiv)); // Reinsere no DOM
+            // Limpa o grid antes de reinserir os cards ordenados
+            productsGrid.innerHTML = '';
+            cards.forEach(card => productsGrid.appendChild(card));
 
             currentPage[activeSectionId] = 1; // Reseta para a primeira página após a ordenação
             renderProductsPage(activeSectionId);
         }
-    </script>
 
-    <footer style="background: #556B2F; color: white; text-align: center; padding: 20px; margin-top: 30px;">
-        <p>Endereço: Avenida Brasília, 57, Serra Dourada 2, Serra/ES.</p>
-        <p>Telefone: (27) 98138-2565</p>
-        <p>Redes Sociais:
-            <a href="https://www.instagram.com/elementosmateriais" target="_blank" style="color: white; text-decoration: underline;">Instagram @elementosmateriais</a>,
-            <a href="https://www.facebook.com/elementosmateriais" target="_blank" style="color: white; text-decoration: underline;">Facebook @elementosmateriais</a>
-        </p>
-    </footer>
+        // --- Funções do Admin ---
+        function checkLogin() {
+            return localStorage.getItem('isAdminLoggedIn') === 'true';
+        }
+
+        function openLoginModal() {
+            document.getElementById('login-modal').style.display = 'flex';
+            document.getElementById('login-message').textContent = '';
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').style.display = 'none';
+        }
+
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginMessage = document.getElementById('login-message');
+
+            if (username === adminUser && password === adminPass) {
+                localStorage.setItem('isAdminLoggedIn', 'true');
+                closeLoginModal();
+                mostrarPainel('painel-admin');
+                renderAdminProducts();
+            } else {
+                loginMessage.textContent = "Usuário ou senha incorretos.";
+            }
+        });
+
+        function addProduct() {
+            const id = document.getElementById('product-id').value;
+            const nome = document.getElementById('product-name').value;
+            const preco = parseFloat(document.getElementById('product-price').value);
+            const imagem = document.getElementById('product-image').value;
+            const menu = document.getElementById('product-menu').value;
+
+            if (nome && !isNaN(preco) && preco > 0 && menu) {
+                if (id) {
+                    // Editar produto existente
+                    const index = produtosSalvos.findIndex(p => p.id === id);
+                    if (index !== -1) {
+                        produtosSalvos[index] = { id: id, nome, preco, imagem, menu };
+                    }
+                } else {
+                    // Adicionar novo produto
+                    const newId = Date.now().toString(); // ID único
+                    produtosSalvos.push({ id: newId, nome, preco, imagem, menu });
+                }
+                salvarProdutos();
+                carregarProdutosSalvos(); // Recarrega todos os produtos no DOM
+                renderAdminProducts(); // Atualiza a tabela do admin
+                clearForm();
+            } else {
+                alert("Por favor, preencha todos os campos corretamente.");
+            }
+        }
+
+        function editProduct(id) {
+            const product = produtosSalvos.find(p => p.id === id);
+            if (product) {
+                document.getElementById('product-id').value = product.id;
+                document.getElementById('product-name').value = product.nome;
+                document.getElementById('product-price').value = product.preco;
+                document.getElementById('product-image').value = product.imagem;
+                document.getElementById('product-menu').value = product.menu;
+            }
+        }
+
+        function deleteProduct(id) {
+            if (confirm("Tem certeza que deseja deletar este produto?")) {
+                produtosSalvos = produtosSalvos.filter(p => p.id !== id);
+                salvarProdutos();
+                carregarProdutosSalvos();
+                renderAdminProducts();
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('product-id').value = '';
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-price').value = '';
+            document.getElementById('product-image').value = '';
+            document.getElementById('product-menu').value = 'produtos';
+        }
+
+        function renderAdminProducts() {
+            const adminProductList = document.getElementById('admin-product-list');
+            adminProductList.innerHTML = ''; // Limpa a lista existente
+
+            produtosSalvos.forEach(p => {
+                const row = adminProductList.insertRow();
+                row.insertCell().innerHTML = `<img src="${p.imagem || 'https://via.placeholder.com/50'}" alt="${p.nome}">`;
+                row.insertCell().textContent = p.nome;
+                row.insertCell().textContent = `R$ ${p.preco.toFixed(2)}`;
+                row.insertCell().textContent = p.menu === 'produtos' ? 'Produtos' : 'Ofertas';
+                const actionsCell = row.insertCell();
+                actionsCell.innerHTML = `
+                    <button onclick="editProduct('${p.id}')" style="background-color: #007bff; margin-right: 5px;">Editar</button>
+                    <button onclick="deleteProduct('${p.id}')" style="background-color: #dc3545;">Deletar</button>
+                `;
+            });
+        }
+
+        function importExcel() {
+            const fileInput = document.getElementById('excel-file');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    // Assumindo que a primeira linha são cabeçalhos e produtos começam da segunda linha
+                    if (json.length > 1) {
+                        const newProducts = json.slice(1).map(row => ({
+                            id: Date.now().toString() + Math.random().toString().substring(2, 8), // Gera um ID único
+                            nome: row[0] || 'Produto sem Nome',
+                            preco: parseFloat(row[1]) || 0,
+                            imagem: row[2] || '', // URL da Imagem
+                            menu: row[3] && (row[3].toLowerCase() === 'ofertas' || row[3].toLowerCase() === 'produtos') ? row[3].toLowerCase() : 'produtos'
+                        }));
+                        produtosSalvos = produtosSalvos.concat(newProducts.filter(np => np.nome && np.preco > 0));
+                        salvarProdutos();
+                        carregarProdutosSalvos();
+                        renderAdminProducts();
+                        alert("Produtos importados com sucesso!");
+                    } else {
+                        alert("Nenhum dado de produto encontrado no arquivo Excel.");
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                alert("Por favor, selecione um arquivo Excel.");
+            }
+        }
+
+        function exportExcel() {
+            const data = [
+                ["Nome", "Preço", "Imagem", "Menu"]
+            ];
+            produtosSalvos.forEach(p => {
+                data.push([p.nome, p.preco, p.imagem, p.menu]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Produtos");
+            XLSX.writeFile(wb, "produtos.xlsx");
+        }
+
+        function deleteAllProducts() {
+            if (confirm("Tem certeza que deseja deletar TODOS os produtos? Esta ação é irreversível!")) {
+                produtosSalvos = [];
+                salvarProdutos();
+                carregarProdutosSalvos();
+                renderAdminProducts();
+                alert("Todos os produtos foram deletados.");
+            }
+        }
+
+        // Inicialização
+        window.onload = function() {
+            carregarProdutosSalvos();
+            mostrarPainel('produtos'); // Garante que a seção "Produtos" esteja ativa ao carregar
+            renderCart(); // Renderiza o carrinho se houver itens salvos
+        };
+    </script>
 </body>
 </html>
