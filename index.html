@@ -31,20 +31,21 @@
             text-align: center;
             width: 200px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            position: relative; /* Para o tooltip */
-            display: none; /* Escondido por padrão, visibilidade controlada pelo JS */
+            position: relative;
         }
-        .product-card img {
+        .product-card .product-thumbnail {
             max-width: 100%;
-            height: 150px; /* Altura fixa para as imagens */
-            object-fit: cover; /* Garante que a imagem preencha o espaço sem distorcer */
+            height: 150px;
+            object-fit: cover;
             border-radius: 5px;
             margin-bottom: 10px;
+            cursor: pointer;
         }
         .product-card h3 {
-            font-size: 1.2em;
+            font-size: 1em;
+            font-family: 'Georgia', serif;
             margin: 10px 0;
-            min-height: 2.4em; /* Garante que o título não "salte" com 1 ou 2 linhas */
+            min-height: 2.4em;
         }
         .product-card p {
             font-size: 1.1em;
@@ -79,15 +80,25 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .cart-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #eee;
-            padding: 10px 0;
+        .cart-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
         }
-        .cart-item:last-child {
-            border-bottom: none;
+        .cart-items-table th, .cart-items-table td {
+            border: 1px solid #eee;
+            padding: 8px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .cart-items-table th {
+            background-color: #f2f2f2;
+        }
+        .cart-items-table img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
         }
         .cart-total {
             text-align: right;
@@ -95,6 +106,33 @@
             font-size: 1.2em;
             font-weight: bold;
         }
+        .cart-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .cart-actions textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 80px;
+            resize: vertical;
+        }
+        .cart-actions button {
+            background: #6B8E23;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+        }
+        .cart-actions button:hover {
+            background: #556B2F;
+        }
+
         .admin-panel input, .admin-panel button, .admin-panel select {
             margin-bottom: 10px;
             padding: 8px;
@@ -108,25 +146,6 @@
         }
         .admin-panel button:hover {
             background: #556B2F;
-        }
-        .admin-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .admin-table th, .admin-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .admin-table th {
-            background-color: #f2f2f2;
-        }
-        .admin-table img {
-            width: 50px;
-            height: 50px;
-            object-fit: cover;
-            border-radius: 5px;
         }
         .pagination {
             display: flex;
@@ -151,35 +170,6 @@
         .pagination span {
             font-weight: bold;
             font-size: 1.1em;
-        }
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-        .tooltip-img {
-            visibility: hidden;
-            width: 150px;
-            background-color: transparent;
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px 0;
-            position: absolute;
-            z-index: 1;
-            bottom: 100%; /* Acima da imagem */
-            left: 50%;
-            margin-left: -75px; /* Centralizar */
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-        .tooltip:hover .tooltip-img {
-            visibility: visible;
-            opacity: 1;
-        }
-        .tooltip-img img {
-            width: 100%;
-            height: auto;
-            display: block;
         }
         .modal {
             display: none;
@@ -243,6 +233,13 @@
         #login-form button:hover {
             background: #556B2F;
         }
+
+        #image-modal-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
     </style>
 </head>
 <body>
@@ -283,10 +280,28 @@
 
     <section id="carrinho" class="section" style="display: none;">
         <div class="cart-panel">
-            <h2>Meu Carrinho</h2>
-            <div id="cart-items"></div>
-            <div class="cart-total" id="cart-total"></div>
-            <button onclick="checkout()">Finalizar Compra</button>
+            <h2>Seu Carrinho</h2>
+            <p>Observações adicionais...</p>
+            <textarea id="observacoes-adicionais" placeholder="Adicione observações ao seu pedido aqui..."></textarea>
+            <table class="cart-items-table">
+                <thead>
+                    <tr>
+                        <th>Imagem</th>
+                        <th>Produto</th>
+                        <th>Valor Unitário</th>
+                        <th>Quantidade</th>
+                        <th>Subtotal</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-items">
+                    </tbody>
+            </table>
+            <div class="cart-total" id="cart-total">Total: R$ 0.00</div>
+            <div class="cart-actions">
+                <button onclick="sendOrderToWhatsApp()">Enviar Pedido para WhatsApp (27) 98138-2565</button>
+                <p>Você pode solicitar o pagamento por **PIX**, receber um <a href="#" target="_blank">Link de pagamento</a> ou negociar pelo WhatsApp.</p>
+            </div>
         </div>
     </section>
 
@@ -309,22 +324,9 @@
             <input type="file" id="excel-file" accept=".xlsx, .xls">
             <button onclick="importExcel()">Importar</button>
 
-            <h3>Lista de Produtos Cadastrados</h3>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Imagem</th>
-                        <th>Nome</th>
-                        <th>Preço</th>
-                        <th>Menu</th>
-                        <th>Ações</th>
-                    </tr>
-                </thead>
-                <tbody id="admin-product-list">
-                    </tbody>
-            </table>
             <button onclick="exportExcel()">Exportar para Excel</button>
             <button onclick="deleteAllProducts()">Deletar Todos os Produtos</button>
+            <button onclick="saveCurrentHtml()">Salvar HTML Atual</button>
         </div>
     </section>
 
@@ -333,11 +335,17 @@
             <span class="close-button" onclick="closeLoginModal()">×</span>
             <h2>Login de Administrador</h2>
             <form id="login-form">
-                <input type="text" id="username" placeholder="Usuário" required>
-                <input type="password" id="password" placeholder="Senha" required>
+                <input type="password" id="admin-password" placeholder="Senha" required>
                 <button type="submit">Entrar</button>
             </form>
             <p id="login-message" style="color: red; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div id="image-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeImageModal()">×</span>
+            <img id="modal-image" src="" alt="Imagem Ampliada">
         </div>
     </div>
 
@@ -352,7 +360,6 @@
     </footer>
 
     <script>
-        // Variáveis globais para controle de paginação e estado
         const productsPerPage = 10;
         let currentPage = {
             'produtos': 1,
@@ -360,10 +367,22 @@
         };
         let produtosSalvos = JSON.parse(localStorage.getItem('produtosSalvos')) || [];
         let carrinho = JSON.parse(localStorage.getItem('carrinho')) || {};
-        const adminUser = "admin";
-        const adminPass = "admin123";
+        const adminPass = "Elementos2025";
+        const whatsappNumber = "5527981382565";
 
-        // Funções para mostrar e esconder painéis
+        // Adiciona um produto de exemplo se a lista estiver vazia (para facilitar o teste)
+        if (produtosSalvos.length === 0) {
+            produtosSalvos.push({
+                id: 'exemplo-1',
+                nome: 'Tijolo Cerâmico',
+                preco: 1.50,
+                imagem: 'https://images.pexels.com/photos/172288/pexels-photo-172288.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Link de exemplo que funciona
+                menu: 'produtos'
+            });
+            salvarProdutos(); // Salva este produto de exemplo
+        }
+
+
         function mostrarPainel(id) {
             document.querySelectorAll('section.section').forEach(sec => {
                 sec.style.display = 'none';
@@ -371,55 +390,85 @@
             });
             const targetPanel = document.getElementById(id);
             if (targetPanel) {
-                targetPanel.style.display = 'block';
-                targetPanel.classList.add('active');
-
                 if (id === 'painel-admin') {
                     if (!checkLogin()) {
                         openLoginModal();
                         return;
+                    } else {
+                        targetPanel.style.display = 'block';
+                        targetPanel.classList.add('active');
                     }
-                    renderAdminProducts();
                 } else if (id === 'carrinho') {
+                    targetPanel.style.display = 'block';
+                    targetPanel.classList.add('active');
                     renderCart();
                 } else {
-                    // Para 'produtos' e 'ofertas', garantir que renderProductsPage seja chamada com o ID correto
+                    targetPanel.style.display = 'block';
+                    targetPanel.classList.add('active');
+                    currentPage[id] = 1;
                     renderProductsPage(id);
                 }
             }
         }
 
-        // --- Funções de Paginação ---
         function renderProductsPage(sectionId) {
             const container = document.getElementById(sectionId);
             const productsGrid = container ? container.querySelector('.products-grid') : null;
-            if (!container || !productsGrid) return; // Garante que os elementos existem
+            if (!container || !productsGrid) return;
 
-            // Pega todos os cartões de produtos que pertencem a esta seção
-            // Garante que allProductCards seja um array mesmo que querySelectorAll retorne vazio
-            const allProductCards = Array.from(container.querySelectorAll('.product-card')).filter(card => card.dataset.menu === sectionId);
+            productsGrid.innerHTML = '';
 
-            // Filtra os produtos com base na busca (se houver)
+            let productsToDisplay = produtosSalvos.filter(p => p.menu === sectionId);
+
             const searchValue = document.getElementById('search').value.toLowerCase();
-            let productsToPaginate = allProductCards.filter(card => {
-                const productName = card.dataset.nome ? card.dataset.nome.toLowerCase() : '';
-                return productName.includes(searchValue);
+            if (searchValue) {
+                productsToDisplay = productsToDisplay.filter(p => {
+                    const productName = p.nome ? p.nome.toLowerCase() : '';
+                    return productName.includes(searchValue);
+                });
+            }
+
+            const currentSortCriteria = document.getElementById('sort').value;
+            productsToDisplay.sort((a, b) => {
+                const nameA = a.nome ? a.nome.toLowerCase() : '';
+                const nameB = b.nome ? b.nome.toLowerCase() : '';
+                const priceA = parseFloat(a.preco || 0);
+                const priceB = parseFloat(b.preco || 0);
+
+                if (currentSortCriteria === 'nome') {
+                    return nameA.localeCompare(nameB);
+                } else if (currentSortCriteria === 'menor') {
+                    return priceA - priceB;
+                } else if (currentSortCriteria === 'maior') {
+                    return priceB - priceA;
+                }
+                return 0;
             });
 
             const startIndex = (currentPage[sectionId] - 1) * productsPerPage;
             const endIndex = startIndex + productsPerPage;
+            const paginatedProducts = productsToDisplay.slice(startIndex, endIndex);
 
-            // Esconde todos os produtos que pertencem a esta seção primeiro
-            allProductCards.forEach(card => card.style.display = 'none');
-
-            // Mostra apenas os produtos da página atual e que passaram pelo filtro de busca
-            productsToPaginate.forEach((card, index) => {
-                if (index >= startIndex && index < endIndex) {
-                    card.style.display = 'block';
-                }
+            paginatedProducts.forEach(p => {
+                const idSanitizado = 'qtd-' + p.nome.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                const card = document.createElement("div");
+                card.className = "product-card";
+                card.dataset.nome = p.nome;
+                card.dataset.preco = p.preco;
+                card.dataset.menu = p.menu;
+                card.innerHTML = `
+                    <a href="#" onclick="openImageModal('${p.imagem || 'https://via.placeholder.com/250'}', '${p.nome}'); return false;">
+                        <img src="${p.imagem || 'https://via.placeholder.com/150'}" alt="${p.nome}" class="product-thumbnail">
+                    </a>
+                    <h3>${p.nome}</h3>
+                    <p>R$ ${p.preco.toFixed(2)}</p>
+                    <input type="number" min="1" value="1" id="${idSanitizado}">
+                    <button onclick="addToCart('${p.nome}', ${p.preco}, '${idSanitizado}', '${p.imagem}')">Adicionar ao Carrinho</button>
+                `;
+                productsGrid.appendChild(card);
             });
 
-            setupPagination(sectionId, productsToPaginate.length);
+            setupPagination(sectionId, productsToDisplay.length);
         }
 
         function setupPagination(sectionId, totalProducts) {
@@ -427,10 +476,11 @@
             if (!paginationDiv) return;
 
             const totalPages = Math.ceil(totalProducts / productsPerPage);
-            paginationDiv.innerHTML = ''; // Limpa a paginação existente
+            currentPage[sectionId] = Math.min(currentPage[sectionId], totalPages === 0 ? 1 : totalPages);
+
+            paginationDiv.innerHTML = '';
 
             if (totalPages > 1) {
-                // Botão Anterior
                 const prevButton = document.createElement('button');
                 prevButton.textContent = 'Anterior';
                 prevButton.disabled = currentPage[sectionId] === 1;
@@ -440,8 +490,16 @@
                 };
                 paginationDiv.appendChild(prevButton);
 
-                // Números das páginas
-                for (let i = 1; i <= totalPages; i++) {
+                const maxPageButtons = 7;
+                let startPage = Math.max(1, currentPage[sectionId] - Math.floor(maxPageButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+                if (endPage - startPage + 1 < maxPageButtons) {
+                    startPage = Math.max(1, endPage - maxPageButtons + 1);
+                }
+
+
+                for (let i = startPage; i <= endPage; i++) {
                     const pageButton = document.createElement('button');
                     pageButton.textContent = i;
                     if (i === currentPage[sectionId]) {
@@ -454,7 +512,6 @@
                     paginationDiv.appendChild(pageButton);
                 }
 
-                // Botão Próximo
                 const nextButton = document.createElement('button');
                 nextButton.textContent = 'Próximo';
                 nextButton.disabled = currentPage[sectionId] === totalPages;
@@ -466,119 +523,115 @@
             }
         }
 
-        // --- Funções de Carregamento e Salvação ---
         function salvarProdutos() {
             localStorage.setItem('produtosSalvos', JSON.stringify(produtosSalvos));
         }
 
         function carregarProdutosSalvos() {
-            // Limpa os produtos existentes e re-adiciona o div de paginação para garantir que ele esteja lá
-            document.getElementById("produtos").innerHTML = '<div class="products-grid"></div><div class="pagination" id="pagination-produtos"></div>';
-            document.getElementById("ofertas").innerHTML = '<div class="products-grid"></div><div class="pagination" id="pagination-ofertas"></div>';
-
-            // Adiciona todos os produtos aos seus respectivos containers (visibilidade controlada por renderProductsPage)
-            produtosSalvos.forEach(p => {
-                const container = document.getElementById(p.menu);
-                const productsGrid = container ? container.querySelector('.products-grid') : null;
-                if (!container || !productsGrid) return; // Garante que os elementos existem
-
-                const idSanitizado = 'qtd-' + p.nome.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
-                const card = document.createElement("div");
-                card.className = "product-card";
-                card.dataset.nome = p.nome;
-                card.dataset.preco = p.preco;
-                card.dataset.menu = p.menu;
-                card.innerHTML = `
-                    <div class="tooltip">
-                        <img src="${p.imagem || 'https://via.placeholder.com/150'}" alt="${p.nome}">
-                        <span class="tooltip-img"><img src="${p.imagem || 'https://via.placeholder.com/250'}" alt="${p.nome} - Ampliado"></span>
-                    </div>
-                    <h3>${p.nome}</h3>
-                    <p>R$ ${p.preco.toFixed(2)}</p>
-                    <input type="number" min="1" value="1" id="${idSanitizado}">
-                    <button onclick="addToCart('${p.nome}', ${p.preco}, '${idSanitizado}', '${p.imagem}')">Adicionar ao Carrinho</button>
-                `;
-                productsGrid.appendChild(card); // Adiciona ao products-grid, não antes da paginação
-            });
-
-            // Renderiza os produtos para a seção ativa inicialmente
-            const activeSection = document.querySelector('.section.active');
-            if (activeSection) {
-                renderProductsPage(activeSection.id);
-            }
+            produtosSalvos = JSON.parse(localStorage.getItem('produtosSalvos')) || [];
+            renderProductsPage('produtos');
+            renderProductsPage('ofertas');
         }
 
-        // --- Funções do Carrinho ---
         function addToCart(nome, preco, idQtd, imagem) {
             const qtdInput = document.getElementById(idQtd);
             const quantidade = parseInt(qtdInput.value);
 
-            if (quantidade > 0) {
-                if (carrinho[nome]) {
-                    carrinho[nome].quantidade += quantidade;
-                } else {
-                    carrinho[nome] = {
-                        preco: preco,
-                        quantidade: quantidade,
-                        imagem: imagem
-                    };
-                }
-                localStorage.setItem('carrinho', JSON.stringify(carrinho));
-                alert(`${quantidade} ${nome}(s) adicionado(s) ao carrinho!`);
-                renderCart(); // Atualiza a visualização do carrinho
+            if (isNaN(quantidade) || quantidade <= 0) {
+                alert("Por favor, insira uma quantidade válida (maior que 0).");
+                return;
+            }
+
+            if (carrinho[nome]) {
+                carrinho[nome].quantidade += quantidade;
             } else {
-                alert("Por favor, insira uma quantidade válida.");
+                carrinho[nome] = {
+                    preco: preco,
+                    quantidade: quantidade,
+                    imagem: imagem
+                };
+            }
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+            alert(`${quantidade} ${nome}(s) adicionado(s) ao carrinho!`);
+            renderCart();
+        }
+
+        function removeFromCart(nomeProduto) {
+            if (confirm(`Tem certeza que deseja remover "${nomeProduto}" do carrinho?`)) {
+                delete carrinho[nomeProduto];
+                localStorage.setItem('carrinho', JSON.stringify(carrinho));
+                renderCart();
             }
         }
 
         function renderCart() {
-            const cartItemsDiv = document.getElementById('cart-items');
+            const cartItemsTbody = document.getElementById('cart-items');
             const cartTotalDiv = document.getElementById('cart-total');
-            cartItemsDiv.innerHTML = '';
+            cartItemsTbody.innerHTML = '';
             let total = 0;
 
-            for (const nome in carrinho) {
-                const item = carrinho[nome];
-                const itemTotal = item.preco * item.quantidade;
-                total += itemTotal;
+            if (Object.keys(carrinho).length === 0) {
+                cartItemsTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Seu carrinho está vazio.</td></tr>';
+            } else {
+                for (const nome in carrinho) {
+                    const item = carrinho[nome];
+                    const itemTotal = item.preco * item.quantidade;
+                    total += itemTotal;
 
-                const itemDiv = document.createElement('div');
-                itemDiv.className = 'cart-item';
-                itemDiv.innerHTML = `
-                    <span><img src="${item.imagem || 'https://via.placeholder.com/50'}" alt="${nome}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px; margin-right: 10px;"> ${nome} (x${item.quantidade}) - R$ ${item.preco.toFixed(2)}</span>
-                    <span>R$ ${itemTotal.toFixed(2)}</span>
-                    <button onclick="removeFromCart('${nome}')" style="background-color: #dc3545;">Remover</button>
-                `;
-                cartItemsDiv.appendChild(itemDiv);
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><img src="${item.imagem || 'https://via.placeholder.com/50'}" alt="${nome}"></td>
+                        <td>${nome}</td>
+                        <td>R$ ${item.preco.toFixed(2)}</td>
+                        <td>${item.quantidade}</td>
+                        <td>R$ ${itemTotal.toFixed(2)}</td>
+                        <td><button onclick="removeFromCart('${nome}')" style="background-color: #dc3545;">Remover</button></td>
+                    `;
+                    cartItemsTbody.appendChild(row);
+                }
             }
             cartTotalDiv.textContent = `Total: R$ ${total.toFixed(2)}`;
             localStorage.setItem('carrinho', JSON.stringify(carrinho));
         }
 
-        function removeFromCart(nome) {
-            if (carrinho[nome]) {
-                delete carrinho[nome];
-                renderCart();
-            }
-        }
-
-        function checkout() {
+        function sendOrderToWhatsApp() {
             if (Object.keys(carrinho).length === 0) {
-                alert("Seu carrinho está vazio!");
+                alert("Seu carrinho está vazio! Adicione produtos antes de enviar o pedido.");
                 return;
             }
-            alert("Compra finalizada! Total: R$ " + parseFloat(document.getElementById('cart-total').textContent.replace('Total: R$ ', '')).toFixed(2));
-            carrinho = {};
-            localStorage.removeItem('carrinho');
-            renderCart();
-            // Aqui você pode adicionar a lógica de envio de dados para um servidor, e-mail, etc.
+
+            let message = "Olá! Gostaria de fazer o seguinte pedido:\n\n";
+            let totalPedido = 0;
+
+            for (const nome in carrinho) {
+                const item = carrinho[nome];
+                const itemTotal = item.preco * item.quantidade;
+                totalPedido += itemTotal;
+                message += `- ${item.quantidade}x ${nome} (R$ ${item.preco.toFixed(2)} cada) = R$ ${itemTotal.toFixed(2)}\n`;
+            }
+
+            const observacoes = document.getElementById('observacoes-adicionais').value;
+            if (observacoes.trim() !== "") {
+                message += `\nObservações: ${observacoes.trim()}\n`;
+            }
+
+            message += `\nTotal do Pedido: R$ ${totalPedido.toFixed(2)}`;
+            message += `\n\nPor favor, aguarde o contato para confirmação e opções de pagamento.`;
+
+            const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappURL, '_blank');
+
+             if (confirm("Pedido enviado! Deseja limpar o carrinho?")) {
+                 carrinho = {};
+                 localStorage.removeItem('carrinho');
+                 renderCart();
+             }
         }
 
-        // --- Funções de Busca e Ordenação ---
         function searchProducts() {
             const activeSection = document.querySelector('.section.active');
             if (activeSection) {
-                currentPage[activeSection.id] = 1; // Reseta a página para a primeira ao buscar
+                currentPage[activeSection.id] = 1;
                 renderProductsPage(activeSection.id);
             }
         }
@@ -588,44 +641,10 @@
             if (!activeSection) return;
 
             const activeSectionId = activeSection.id;
-            const container = document.getElementById(activeSectionId);
-            const productsGrid = container ? container.querySelector('.products-grid') : null;
-            if (!container || !productsGrid) return;
-
-            let cards = Array.from(productsGrid.querySelectorAll('.product-card'));
-
-            // Filtra os produtos com base na busca antes de ordenar
-            const searchValue = document.getElementById('search').value.toLowerCase();
-            cards = cards.filter(card => {
-                const productName = card.dataset.nome ? card.dataset.nome.toLowerCase() : '';
-                return productName.includes(searchValue);
-            });
-
-            cards.sort((a, b) => {
-                const nameA = a.dataset.nome ? a.dataset.nome.toLowerCase() : '';
-                const nameB = b.dataset.nome ? b.dataset.nome.toLowerCase() : '';
-                const priceA = parseFloat(a.dataset.preco || 0);
-                const priceB = parseFloat(b.dataset.preco || 0);
-
-                if (criteria === 'nome') {
-                    return nameA.localeCompare(nameB);
-                } else if (criteria === 'menor') {
-                    return priceA - priceB;
-                } else if (criteria === 'maior') {
-                    return priceB - priceA;
-                }
-                return 0;
-            });
-
-            // Limpa o grid antes de reinserir os cards ordenados
-            productsGrid.innerHTML = '';
-            cards.forEach(card => productsGrid.appendChild(card));
-
-            currentPage[activeSectionId] = 1; // Reseta para a primeira página após a ordenação
+            currentPage[activeSectionId] = 1;
             renderProductsPage(activeSectionId);
         }
 
-        // --- Funções do Admin ---
         function checkLogin() {
             return localStorage.getItem('isAdminLoggedIn') === 'true';
         }
@@ -633,6 +652,7 @@
         function openLoginModal() {
             document.getElementById('login-modal').style.display = 'flex';
             document.getElementById('login-message').textContent = '';
+            document.getElementById('admin-password').value = '';
         }
 
         function closeLoginModal() {
@@ -641,17 +661,17 @@
 
         document.getElementById('login-form').addEventListener('submit', function(event) {
             event.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+            const passwordInput = document.getElementById('admin-password');
+            const password = passwordInput.value;
             const loginMessage = document.getElementById('login-message');
 
-            if (username === adminUser && password === adminPass) {
+            if (password === adminPass) {
                 localStorage.setItem('isAdminLoggedIn', 'true');
                 closeLoginModal();
                 mostrarPainel('painel-admin');
-                renderAdminProducts();
             } else {
-                loginMessage.textContent = "Usuário ou senha incorretos.";
+                loginMessage.textContent = "Senha incorreta.";
+                passwordInput.value = '';
             }
         });
 
@@ -664,42 +684,42 @@
 
             if (nome && !isNaN(preco) && preco > 0 && menu) {
                 if (id) {
-                    // Editar produto existente
                     const index = produtosSalvos.findIndex(p => p.id === id);
                     if (index !== -1) {
                         produtosSalvos[index] = { id: id, nome, preco, imagem, menu };
+                        alert("Produto atualizado com sucesso!");
                     }
                 } else {
-                    // Adicionar novo produto
-                    const newId = Date.now().toString(); // ID único
+                    const newId = Date.now().toString() + Math.random().toString(36).substring(2, 8);
                     produtosSalvos.push({ id: newId, nome, preco, imagem, menu });
+                    alert("Produto adicionado com sucesso!");
                 }
                 salvarProdutos();
-                carregarProdutosSalvos(); // Recarrega todos os produtos no DOM
-                renderAdminProducts(); // Atualiza a tabela do admin
+                carregarProdutosSalvos();
                 clearForm();
             } else {
-                alert("Por favor, preencha todos os campos corretamente.");
+                alert("Por favor, preencha todos os campos corretamente (Nome, Preço > 0, Imagem, Menu).");
             }
         }
 
         function editProduct(id) {
-            const product = produtosSalvos.find(p => p.id === id);
-            if (product) {
-                document.getElementById('product-id').value = product.id;
-                document.getElementById('product-name').value = product.nome;
-                document.getElementById('product-price').value = product.preco;
-                document.getElementById('product-image').value = product.imagem;
-                document.getElementById('product-menu').value = product.menu;
-            }
-        }
+             const product = produtosSalvos.find(p => p.id === id);
+             if (product) {
+                 document.getElementById('product-id').value = product.id;
+                 document.getElementById('product-name').value = product.nome;
+                 document.getElementById('product-price').value = product.preco;
+                 document.getElementById('product-image').value = product.imagem;
+                 document.getElementById('product-menu').value = product.menu;
+                 alert("Produto carregado para edição. Altere os campos no formulário acima e clique em 'Salvar Produto'.");
+             }
+         }
 
         function deleteProduct(id) {
             if (confirm("Tem certeza que deseja deletar este produto?")) {
                 produtosSalvos = produtosSalvos.filter(p => p.id !== id);
                 salvarProdutos();
                 carregarProdutosSalvos();
-                renderAdminProducts();
+                alert("Produto deletado com sucesso!");
             }
         }
 
@@ -709,24 +729,6 @@
             document.getElementById('product-price').value = '';
             document.getElementById('product-image').value = '';
             document.getElementById('product-menu').value = 'produtos';
-        }
-
-        function renderAdminProducts() {
-            const adminProductList = document.getElementById('admin-product-list');
-            adminProductList.innerHTML = ''; // Limpa a lista existente
-
-            produtosSalvos.forEach(p => {
-                const row = adminProductList.insertRow();
-                row.insertCell().innerHTML = `<img src="${p.imagem || 'https://via.placeholder.com/50'}" alt="${p.nome}">`;
-                row.insertCell().textContent = p.nome;
-                row.insertCell().textContent = `R$ ${p.preco.toFixed(2)}`;
-                row.insertCell().textContent = p.menu === 'produtos' ? 'Produtos' : 'Ofertas';
-                const actionsCell = row.insertCell();
-                actionsCell.innerHTML = `
-                    <button onclick="editProduct('${p.id}')" style="background-color: #007bff; margin-right: 5px;">Editar</button>
-                    <button onclick="deleteProduct('${p.id}')" style="background-color: #dc3545;">Deletar</button>
-                `;
-            });
         }
 
         function importExcel() {
@@ -742,22 +744,20 @@
                     const worksheet = workbook.Sheets[sheetName];
                     const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-                    // Assumindo que a primeira linha são cabeçalhos e produtos começam da segunda linha
                     if (json.length > 1) {
                         const newProducts = json.slice(1).map(row => ({
-                            id: Date.now().toString() + Math.random().toString().substring(2, 8), // Gera um ID único
+                            id: Date.now().toString() + Math.random().toString(36).substring(2, 8),
                             nome: row[0] || 'Produto sem Nome',
                             preco: parseFloat(row[1]) || 0,
-                            imagem: row[2] || '', // URL da Imagem
+                            imagem: row[2] || '',
                             menu: row[3] && (row[3].toLowerCase() === 'ofertas' || row[3].toLowerCase() === 'produtos') ? row[3].toLowerCase() : 'produtos'
                         }));
                         produtosSalvos = produtosSalvos.concat(newProducts.filter(np => np.nome && np.preco > 0));
                         salvarProdutos();
                         carregarProdutosSalvos();
-                        renderAdminProducts();
                         alert("Produtos importados com sucesso!");
                     } else {
-                        alert("Nenhum dado de produto encontrado no arquivo Excel.");
+                        alert("Nenhum dado de produto encontrado no arquivo Excel após o cabeçalho. Certifique-se de que a primeira linha é o cabeçalho e há dados nas colunas.");
                     }
                 };
                 reader.readAsArrayBuffer(file);
@@ -785,16 +785,41 @@
                 produtosSalvos = [];
                 salvarProdutos();
                 carregarProdutosSalvos();
-                renderAdminProducts();
                 alert("Todos os produtos foram deletados.");
             }
         }
 
-        // Inicialização
+        function saveCurrentHtml() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert("O arquivo HTML foi salvo como 'index.html'.");
+        }
+
+        function openImageModal(imageUrl, altText) {
+            const imageModal = document.getElementById('image-modal');
+            const modalImage = document.getElementById('modal-image');
+            modalImage.src = imageUrl;
+            modalImage.alt = altText;
+            imageModal.style.display = 'flex';
+        }
+
+        function closeImageModal() {
+            document.getElementById('image-modal').style.display = 'none';
+        }
+
         window.onload = function() {
+            localStorage.removeItem('isAdminLoggedIn');
             carregarProdutosSalvos();
-            mostrarPainel('produtos'); // Garante que a seção "Produtos" esteja ativa ao carregar
-            renderCart(); // Renderiza o carrinho se houver itens salvos
+            mostrarPainel('produtos');
+            renderCart();
         };
     </script>
 </body>
