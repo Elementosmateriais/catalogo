@@ -1,10 +1,7 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-    <meta charset="utf-8"/>
-    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<html lang="pt-BR"><head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Elementos Materiais</title>
- <title>Catálogo</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <style>
         body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
@@ -245,7 +242,7 @@
 </head>
 <body>
     <header>
-        <img src="imagens/Logo.PNG" alt="Logo da Empresa">
+        <img alt="Logo da Empresa" class="logo" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7d2Yg-G4b2v8mX7rD-4fQx5yFf5sX8q6b_w&amp;s">
         <h1>Elementos Materiais de Construção</h1>
     </header>
 
@@ -269,7 +266,7 @@
         </select>
     </div>
 
-    <section id="produtos" class="section active">
+    <section id="produtos" class="section" style="display: none;">
         <div class="products-grid"></div>
         <div class="pagination" id="pagination-produtos"></div>
     </section>
@@ -295,8 +292,7 @@
                         <th>Ações</th>
                     </tr>
                 </thead>
-                <tbody id="cart-items">
-                    </tbody>
+                <tbody id="cart-items"></tbody>
             </table>
             <div class="cart-total" id="cart-total">Total: R$ 0.00</div>
             <div class="cart-actions">
@@ -306,7 +302,7 @@
         </div>
     </section>
 
-    <section id="painel-admin" class="section" style="display: none;">
+    <section id="painel-admin" class="section active" style="display: block;">
         <div class="admin-panel">
             <h2>Painel de Administração</h2>
             <h3>Adicionar/Editar Produto</h3>
@@ -331,12 +327,12 @@
         </div>
     </section>
 
-    <div id="login-modal" class="modal">
+    <div id="login-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <span class="close-button" onclick="closeLoginModal()">×</span>
             <h2>Login de Administrador</h2>
             <form id="login-form">
-                <input type="password" id="admin-password" placeholder="Senha" required>
+                <input type="password" id="admin-password" placeholder="Senha" required="">
                 <button type="submit">Entrar</button>
             </form>
             <p id="login-message" style="color: red; margin-top: 10px;"></p>
@@ -346,7 +342,7 @@
     <div id="image-modal" class="modal">
         <div class="modal-content">
             <span class="close-button" onclick="closeImageModal()">×</span>
-            <img src="imagens/banner1.JPG" alt="Primeiro Banner">
+            <img id="modal-image" src="" alt="Imagem Ampliada">
         </div>
     </div>
 
@@ -823,5 +819,6 @@
             renderCart();
         };
     </script>
-</body>
-</html>
+
+
+</body></html>
