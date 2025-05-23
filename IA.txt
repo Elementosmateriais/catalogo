@@ -1,0 +1,22 @@
+Entendi a imagem que você enviou! Ela mostra claramente:
+
+A pasta no GitHub é imagens (tudo minúsculo).
+O arquivo dentro dela é Logo.PNG (L e P maiúsculos).
+Isso é excelente, pois significa que a capitalização no seu index.html (imagens/Logo.PNG) está idêntica à capitalização no seu repositório do GitHub. Isso descarta a causa mais comum desse tipo de problema no Vercel (sensibilidade a maiúsculas/minúsculas).
+
+O fato de a imagem não aparecer quando você acessa https://catalogo.vercel.app/imagens/Logo.PNG diretamente (como mostrado na sua captura de tela anterior) é a prova de que o Vercel não está servindo essa imagem naquele caminho.
+
+Mesmo com o deploy aparecendo como "Ready", pode haver alguma falha interna no Vercel que impede a inclusão de arquivos estáticos corretamente.
+
+Vamos tentar forçar um novo deploy no Vercel:
+
+Vá para o seu painel do Vercel: Acesse https://vercel.com/dashboard.
+Encontre seu projeto catalogo: Clique nele.
+Vá para a aba "Deployments" (Implantações).
+Encontre o último deploy (deve ser o mais recente que você fez).
+Clique no botão de três pontos (...) ao lado do deploy e selecione "Redeploy" (Reimplantar) ou "Redeploy with existing build cache" (Reimplantar com cache de build existente). Tente primeiro "Redeploy" sem cache, se houver opção. Se não, qualquer "Redeploy" serve.
+Esta ação forçará o Vercel a reconstruir e republicar seu site do zero, o que pode corrigir qualquer problema de empacotamento de arquivos que possa ter ocorrido.
+
+Após iniciar o redeploy, aguarde alguns minutos e, em seguida, recarregue seu site em catalogo.vercel.app (e lembre-se de limpar o cache do navegador com Ctrl + F5 ou abrir em uma aba anônima).
+
+Me diga se o redeploy funcionou e se as imagens finalmente apareceram.
