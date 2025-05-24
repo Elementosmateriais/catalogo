@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Elementos Materiais</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        header { background: #556B2F; padding: 10px 20px; color: white; display: flex; align-items: center; justify-content: center; flex-direction: column; }
+        header img.logo { height: 100px; margin-bottom: 10px; }
+        header h1 { margin: 0; font-size: 28px; text-align: center; }
+        nav { background: #6B8E23; padding: 10px; text-align: center; }
+        nav a { color: white; margin: 0 15px; text-decoration: none; font-weight: bold; cursor: pointer; }
+        .search-bar { padding: 20px; text-align: center; }
+        .search-bar input { width: 50%; padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px; }
+        .filters { text-align: center; margin-bottom: 20px; }
+        .filters select { padding: 10px; font-size: 16px; margin: 0 10px; border: 1px solid #ddd; border-radius: 5px; }
+        .products-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+            justify-content: center;
+        }
+        .product-card {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            width: 200px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .product-card .product-thumbnail {
+            max-width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .product-card h3 {
+            font-size: 1em;
+            font-family: 'Georgia', serif;
+            margin: 10px 0;
+            min-height: 2.4em;
+        }
+        .product-card p {
+            font-size: 1.1em;
+            color: #556B2F;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .product-card input[type="number"] {
+            width: 60px;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .product-card button {
+            background: #6B8E23;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        .product-card button:hover {
+            background: #556B2F;
+        }
+        .cart-panel, .admin-panel, .login-panel {
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 800px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .cart-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .cart-items-table th, .cart-items-table td {
+            border: 1px solid #eee;
+            padding: 8px;
+            text-align: left;
+            vertical-align: middle;
+        }
+        .cart-items-table th {
+            background-color: #f2f2f2;
+        }
+        .cart-items-table img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+        .cart-total {
+            text-align: right;
+            padding: 15px 0;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        .cart-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .cart-actions textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            min-height: 80px;
+            resize: vertical;
+        }
+        .cart-actions button {
+            background: #6B8E23;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+        }
+        .cart-actions button:hover {
+            background: #556B2F;
+        }
+
+        .admin-panel input, .admin-panel button, .admin-panel select {
+            margin-bottom: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        .admin-panel button {
+            background: #6B8E23;
+            color: white;
+            cursor: pointer;
+        }
+        .admin-panel button:hover {
+            background: #556B2F;
+        }
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .pagination button {
+            background: #6B8E23;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .pagination button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .pagination span {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 500px;
+            border-radius: 8px;
+            position: relative;
+            text-align: center;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            cursor: pointer;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        #login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        #login-form input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #login-form button {
+            background: #6B8E23;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        #login-form button:hover {
+            background: #556B2F;
+        }
+
+        #image-modal-content img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <img alt="Logo da Empresa" class="logo" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ7d2Yg-G4b2v8mX7rD-4fQx5yFf5sX8q6b_w&s">
+        <h1>Elementos Materiais de Construção</h1>
+    </header>
+
+    <nav>
+        <a href="#" onclick="mostrarPainel('produtos')">Produtos</a>
+        <a href="#" onclick="mostrarPainel('ofertas')">Ofertas</a>
+        <a href="#" onclick="mostrarPainel('carrinho')">Carrinho</a>
+        <a href="#" onclick="mostrarPainel('painel-admin')">Admin</a>
+    </nav>
+
+    <div class="search-bar">
+        <input type="text" id="search" placeholder="Buscar produtos..." onkeyup="searchProducts()">
+    </div>
+
+    <div class="filters">
+        <label for="sort">Ordenar por:</label>
+        <select id="sort" onchange="sortProducts(this.value)">
+            <option value="nome">Nome</option>
+            <option value="menor">Preço (Menor para Maior)</option>
+            <option value="maior">Preço (Maior para Menor)</option>
+        </select>
+    </div>
+
+    <section id="produtos" class="section active">
+        <div class="products-grid"></div>
+        <div class="pagination" id="pagination-produtos"></div>
+    </section>
+
+    <section id="ofertas" class="section" style="display: none;">
+        <div class="products-grid"></div>
+        <div class="pagination" id="pagination-ofertas"></div>
+    </section>
+
+    <section id="carrinho" class="section" style="display: none;">
+        <div class="cart-panel">
+            <h2>Seu Carrinho</h2>
+            <p>Observações adicionais...</p>
+            <textarea id="observacoes-adicionais" placeholder="Adicione observações ao seu pedido aqui..."></textarea>
+            <table class="cart-items-table">
+                <thead>
+                    <tr>
+                        <th>Imagem</th>
+                        <th>Produto</th>
+                        <th>Valor Unitário</th>
+                        <th>Quantidade</th>
+                        <th>Subtotal</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="cart-items">
+                    </tbody>
+            </table>
+            <div class="cart-total" id="cart-total">Total: R$ 0.00</div>
+            <div class="cart-actions">
+                <button onclick="sendOrderToWhatsApp()">Enviar Pedido para WhatsApp (27) 98138-2565</button>
+                <p>Você pode solicitar o pagamento por **PIX**, receber um <a href="#" target="_blank">Link de pagamento</a> ou negociar pelo WhatsApp.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="painel-admin" class="section" style="display: none;">
+        <div class="admin-panel">
+            <h2>Painel de Administração</h2>
+            <h3>Adicionar/Editar Produto</h3>
+            <input type="hidden" id="product-id">
+            <input type="text" id="product-name" placeholder="Nome do Produto">
+            <input type="number" id="product-price" placeholder="Preço" step="0.01">
+            <input type="text" id="product-image" placeholder="URL da Imagem">
+            <select id="product-menu">
+                <option value="produtos">Produtos</option>
+                <option value="ofertas">Ofertas</option>
+            </select>
+            <button onclick="addProduct()">Salvar Produto</button>
+            <button onclick="clearForm()">Limpar Formulário</button>
+
+            <h3>Importar Produtos (Excel)</h3>
+            <input type="file" id="excel-file" accept=".xlsx, .xls">
+            <button onclick="importExcel()">Importar</button>
+
+            <button onclick="exportExcel()">Exportar para Excel</button>
+            <button onclick="deleteAllProducts()">Deletar Todos os Produtos</button>
+            <button onclick="saveCurrentHtml()">Salvar HTML Atual</button>
+        </div>
+    </section>
+
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeLoginModal()">×</span>
+            <h2>Login de Administrador</h2>
+            <form id="login-form">
+                <input type="password" id="admin-password" placeholder="Senha" required>
+                <button type="submit">Entrar</button>
+            </form>
+            <p id="login-message" style="color: red; margin-top: 10px;"></p>
+        </div>
+    </div>
+
+    <div id="image-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeImageModal()">×</span>
+            <img id="modal-image" src="" alt="Imagem Ampliada">
+        </div>
+    </div>
+
+    <footer style="background: #556B2F; color: white; text-align: center; padding: 20px; margin-top: 30px;">
+        <p>Endereço: Avenida Brasília, 57, Serra Dourada 2, Serra/ES.</p>
+        <p>Telefone: (27) 98138-2565</p>
+        <p>Redes Sociais:
+            <a href="https://www.instagram.com/elementosmateriais" target="_blank" style="color: white; text-decoration: underline;">Instagram @elementosmateriais</a>,
+            <a href="https://www.facebook.com/elementosmateriais" target="_blank" style="color: white; text-decoration: underline;">Facebook/elementosmateriais</a>
+        </p>
+        <p>© 2024 Elementos Materiais de Construção. Todos os direitos reservados.</p>
+    </footer>
+
+    <script>
+        const productsPerPage = 10;
+        let currentPage = {
+            'produtos': 1,
+            'ofertas': 1
+        };
+        let produtosSalvos = JSON.parse(localStorage.getItem('produtosSalvos')) || [];
+        let carrinho = JSON.parse(localStorage.getItem('carrinho')) || {};
+        const adminPass = "Elementos2025";
+        const whatsappNumber = "5527981382565";
+
+        // Adiciona um produto de exemplo se a lista estiver vazia (para facilitar o teste)
+        if (produtosSalvos.length === 0) {
+            produtosSalvos.push({
+                id: 'exemplo-1',
+                nome: 'Tijolo Cerâmico',
+                preco: 1.50,
+                imagem: 'https://images.pexels.com/photos/172288/pexels-photo-172288.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1', // Link de exemplo que funciona
+                menu: 'produtos'
+            });
+            salvarProdutos(); // Salva este produto de exemplo
+        }
+
+
+        function mostrarPainel(id) {
+            document.querySelectorAll('section.section').forEach(sec => {
+                sec.style.display = 'none';
+                sec.classList.remove('active');
+            });
+            const targetPanel = document.getElementById(id);
+            if (targetPanel) {
+                if (id === 'painel-admin') {
+                    if (!checkLogin()) {
+                        openLoginModal();
+                        return;
+                    } else {
+                        targetPanel.style.display = 'block';
+                        targetPanel.classList.add('active');
+                    }
+                } else if (id === 'carrinho') {
+                    targetPanel.style.display = 'block';
+                    targetPanel.classList.add('active');
+                    renderCart();
+                } else {
+                    targetPanel.style.display = 'block';
+                    targetPanel.classList.add('active');
+                    currentPage[id] = 1;
+                    renderProductsPage(id);
+                }
+            }
+        }
+
+        function renderProductsPage(sectionId) {
+            const container = document.getElementById(sectionId);
+            const productsGrid = container ? container.querySelector('.products-grid') : null;
+            if (!container || !productsGrid) return;
+
+            productsGrid.innerHTML = '';
+
+            let productsToDisplay = produtosSalvos.filter(p => p.menu === sectionId);
+
+            const searchValue = document.getElementById('search').value.toLowerCase();
+            if (searchValue) {
+                productsToDisplay = productsToDisplay.filter(p => {
+                    const productName = p.nome ? p.nome.toLowerCase() : '';
+                    return productName.includes(searchValue);
+                });
+            }
+
+            const currentSortCriteria = document.getElementById('sort').value;
+            productsToDisplay.sort((a, b) => {
+                const nameA = a.nome ? a.nome.toLowerCase() : '';
+                const nameB = b.nome ? b.nome.toLowerCase() : '';
+                const priceA = parseFloat(a.preco || 0);
+                const priceB = parseFloat(b.preco || 0);
+
+                if (currentSortCriteria === 'nome') {
+                    return nameA.localeCompare(nameB);
+                } else if (currentSortCriteria === 'menor') {
+                    return priceA - priceB;
+                } else if (currentSortCriteria === 'maior') {
+                    return priceB - priceA;
+                }
+                return 0;
+            });
+
+            const startIndex = (currentPage[sectionId] - 1) * productsPerPage;
+            const endIndex = startIndex + productsPerPage;
+            const paginatedProducts = productsToDisplay.slice(startIndex, endIndex);
+
+            paginatedProducts.forEach(p => {
+                const idSanitizado = 'qtd-' + p.nome.replace(/\s+/g, '-').replace(/[^a-zA-Z0-9-]/g, '');
+                const card = document.createElement("div");
+                card.className = "product-card";
+                card.dataset.nome = p.nome;
+                card.dataset.preco = p.preco;
+                card.dataset.menu = p.menu;
+                card.innerHTML = `
+                    <a href="#" onclick="openImageModal('${p.imagem || 'https://via.placeholder.com/250'}', '${p.nome}'); return false;">
+                        <img src="${p.imagem || 'https://via.placeholder.com/150'}" alt="${p.nome}" class="product-thumbnail">
+                    </a>
+                    <h3>${p.nome}</h3>
+                    <p>R$ ${p.preco.toFixed(2)}</p>
+                    <input type="number" min="1" value="1" id="${idSanitizado}">
+                    <button onclick="addToCart('${p.nome}', ${p.preco}, '${idSanitizado}', '${p.imagem}')">Adicionar ao Carrinho</button>
+                `;
+                productsGrid.appendChild(card);
+            });
+
+            setupPagination(sectionId, productsToDisplay.length);
+        }
+
+        function setupPagination(sectionId, totalProducts) {
+            const paginationDiv = document.getElementById(`pagination-${sectionId}`);
+            if (!paginationDiv) return;
+
+            const totalPages = Math.ceil(totalProducts / productsPerPage);
+            currentPage[sectionId] = Math.min(currentPage[sectionId], totalPages === 0 ? 1 : totalPages);
+
+            paginationDiv.innerHTML = '';
+
+            if (totalPages > 1) {
+                const prevButton = document.createElement('button');
+                prevButton.textContent = 'Anterior';
+                prevButton.disabled = currentPage[sectionId] === 1;
+                prevButton.onclick = () => {
+                    currentPage[sectionId]--;
+                    renderProductsPage(sectionId);
+                };
+                paginationDiv.appendChild(prevButton);
+
+                const maxPageButtons = 7;
+                let startPage = Math.max(1, currentPage[sectionId] - Math.floor(maxPageButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+                if (endPage - startPage + 1 < maxPageButtons) {
+                    startPage = Math.max(1, endPage - maxPageButtons + 1);
+                }
+
+
+                for (let i = startPage; i <= endPage; i++) {
+                    const pageButton = document.createElement('button');
+                    pageButton.textContent = i;
+                    if (i === currentPage[sectionId]) {
+                        pageButton.style.backgroundColor = '#556B2F';
+                    }
+                    pageButton.onclick = () => {
+                        currentPage[sectionId] = i;
+                        renderProductsPage(sectionId);
+                    };
+                    paginationDiv.appendChild(pageButton);
+                }
+
+                const nextButton = document.createElement('button');
+                nextButton.textContent = 'Próximo';
+                nextButton.disabled = currentPage[sectionId] === totalPages;
+                nextButton.onclick = () => {
+                    currentPage[sectionId]++;
+                    renderProductsPage(sectionId);
+                };
+                paginationDiv.appendChild(nextButton);
+            }
+        }
+
+        function salvarProdutos() {
+            localStorage.setItem('produtosSalvos', JSON.stringify(produtosSalvos));
+        }
+
+        function carregarProdutosSalvos() {
+            produtosSalvos = JSON.parse(localStorage.getItem('produtosSalvos')) || [];
+            renderProductsPage('produtos');
+            renderProductsPage('ofertas');
+        }
+
+        function addToCart(nome, preco, idQtd, imagem) {
+            const qtdInput = document.getElementById(idQtd);
+            const quantidade = parseInt(qtdInput.value);
+
+            if (isNaN(quantidade) || quantidade <= 0) {
+                alert("Por favor, insira uma quantidade válida (maior que 0).");
+                return;
+            }
+
+            if (carrinho[nome]) {
+                carrinho[nome].quantidade += quantidade;
+            } else {
+                carrinho[nome] = {
+                    preco: preco,
+                    quantidade: quantidade,
+                    imagem: imagem
+                };
+            }
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+            alert(`${quantidade} ${nome}(s) adicionado(s) ao carrinho!`);
+            renderCart();
+        }
+
+        function removeFromCart(nomeProduto) {
+            if (confirm(`Tem certeza que deseja remover "${nomeProduto}" do carrinho?`)) {
+                delete carrinho[nomeProduto];
+                localStorage.setItem('carrinho', JSON.stringify(carrinho));
+                renderCart();
+            }
+        }
+
+        function renderCart() {
+            const cartItemsTbody = document.getElementById('cart-items');
+            const cartTotalDiv = document.getElementById('cart-total');
+            cartItemsTbody.innerHTML = '';
+            let total = 0;
+
+            if (Object.keys(carrinho).length === 0) {
+                cartItemsTbody.innerHTML = '<tr><td colspan="6" style="text-align: center;">Seu carrinho está vazio.</td></tr>';
+            } else {
+                for (const nome in carrinho) {
+                    const item = carrinho[nome];
+                    const itemTotal = item.preco * item.quantidade;
+                    total += itemTotal;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><img src="${item.imagem || 'https://via.placeholder.com/50'}" alt="${nome}"></td>
+                        <td>${nome}</td>
+                        <td>R$ ${item.preco.toFixed(2)}</td>
+                        <td>${item.quantidade}</td>
+                        <td>R$ ${itemTotal.toFixed(2)}</td>
+                        <td><button onclick="removeFromCart('${nome}')" style="background-color: #dc3545;">Remover</button></td>
+                    `;
+                    cartItemsTbody.appendChild(row);
+                }
+            }
+            cartTotalDiv.textContent = `Total: R$ ${total.toFixed(2)}`;
+            localStorage.setItem('carrinho', JSON.stringify(carrinho));
+        }
+
+        function sendOrderToWhatsApp() {
+            if (Object.keys(carrinho).length === 0) {
+                alert("Seu carrinho está vazio! Adicione produtos antes de enviar o pedido.");
+                return;
+            }
+
+            let message = "Olá! Gostaria de fazer o seguinte pedido:\n\n";
+            let totalPedido = 0;
+
+            for (const nome in carrinho) {
+                const item = carrinho[nome];
+                const itemTotal = item.preco * item.quantidade;
+                totalPedido += itemTotal;
+                message += `- ${item.quantidade}x ${nome} (R$ ${item.preco.toFixed(2)} cada) = R$ ${itemTotal.toFixed(2)}\n`;
+            }
+
+            const observacoes = document.getElementById('observacoes-adicionais').value;
+            if (observacoes.trim() !== "") {
+                message += `\nObservações: ${observacoes.trim()}\n`;
+            }
+
+            message += `\nTotal do Pedido: R$ ${totalPedido.toFixed(2)}`;
+            message += `\n\nPor favor, aguarde o contato para confirmação e opções de pagamento.`;
+
+            const whatsappURL = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`;
+            window.open(whatsappURL, '_blank');
+
+             if (confirm("Pedido enviado! Deseja limpar o carrinho?")) {
+                 carrinho = {};
+                 localStorage.removeItem('carrinho');
+                 renderCart();
+             }
+        }
+
+        function searchProducts() {
+            const activeSection = document.querySelector('.section.active');
+            if (activeSection) {
+                currentPage[activeSection.id] = 1;
+                renderProductsPage(activeSection.id);
+            }
+        }
+
+        function sortProducts(criteria) {
+            const activeSection = document.querySelector('.section.active');
+            if (!activeSection) return;
+
+            const activeSectionId = activeSection.id;
+            currentPage[activeSectionId] = 1;
+            renderProductsPage(activeSectionId);
+        }
+
+        function checkLogin() {
+            return localStorage.getItem('isAdminLoggedIn') === 'true';
+        }
+
+        function openLoginModal() {
+            document.getElementById('login-modal').style.display = 'flex';
+            document.getElementById('login-message').textContent = '';
+            document.getElementById('admin-password').value = '';
+        }
+
+        function closeLoginModal() {
+            document.getElementById('login-modal').style.display = 'none';
+        }
+
+        document.getElementById('login-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const passwordInput = document.getElementById('admin-password');
+            const password = passwordInput.value;
+            const loginMessage = document.getElementById('login-message');
+
+            if (password === adminPass) {
+                localStorage.setItem('isAdminLoggedIn', 'true');
+                closeLoginModal();
+                mostrarPainel('painel-admin');
+            } else {
+                loginMessage.textContent = "Senha incorreta.";
+                passwordInput.value = '';
+            }
+        });
+
+        function addProduct() {
+            const id = document.getElementById('product-id').value;
+            const nome = document.getElementById('product-name').value;
+            const preco = parseFloat(document.getElementById('product-price').value);
+            const imagem = document.getElementById('product-image').value;
+            const menu = document.getElementById('product-menu').value;
+
+            if (nome && !isNaN(preco) && preco > 0 && menu) {
+                if (id) {
+                    const index = produtosSalvos.findIndex(p => p.id === id);
+                    if (index !== -1) {
+                        produtosSalvos[index] = { id: id, nome, preco, imagem, menu };
+                        alert("Produto atualizado com sucesso!");
+                    }
+                } else {
+                    const newId = Date.now().toString() + Math.random().toString(36).substring(2, 8);
+                    produtosSalvos.push({ id: newId, nome, preco, imagem, menu });
+                    alert("Produto adicionado com sucesso!");
+                }
+                salvarProdutos();
+                carregarProdutosSalvos();
+                clearForm();
+            } else {
+                alert("Por favor, preencha todos os campos corretamente (Nome, Preço > 0, Imagem, Menu).");
+            }
+        }
+
+        function editProduct(id) {
+             const product = produtosSalvos.find(p => p.id === id);
+             if (product) {
+                 document.getElementById('product-id').value = product.id;
+                 document.getElementById('product-name').value = product.nome;
+                 document.getElementById('product-price').value = product.preco;
+                 document.getElementById('product-image').value = product.imagem;
+                 document.getElementById('product-menu').value = product.menu;
+                 alert("Produto carregado para edição. Altere os campos no formulário acima e clique em 'Salvar Produto'.");
+             }
+         }
+
+        function deleteProduct(id) {
+            if (confirm("Tem certeza que deseja deletar este produto?")) {
+                produtosSalvos = produtosSalvos.filter(p => p.id !== id);
+                salvarProdutos();
+                carregarProdutosSalvos();
+                alert("Produto deletado com sucesso!");
+            }
+        }
+
+        function clearForm() {
+            document.getElementById('product-id').value = '';
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-price').value = '';
+            document.getElementById('product-image').value = '';
+            document.getElementById('product-menu').value = 'produtos';
+        }
+
+        function importExcel() {
+            const fileInput = document.getElementById('excel-file');
+            const file = fileInput.files[0];
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    if (json.length > 1) {
+                        const newProducts = json.slice(1).map(row => ({
+                            id: Date.now().toString() + Math.random().toString(36).substring(2, 8),
+                            nome: row[0] || 'Produto sem Nome',
+                            preco: parseFloat(row[1]) || 0,
+                            imagem: row[2] || '',
+                            menu: row[3] && (row[3].toLowerCase() === 'ofertas' || row[3].toLowerCase() === 'produtos') ? row[3].toLowerCase() : 'produtos'
+                        }));
+                        produtosSalvos = produtosSalvos.concat(newProducts.filter(np => np.nome && np.preco > 0));
+                        salvarProdutos();
+                        carregarProdutosSalvos();
+                        alert("Produtos importados com sucesso!");
+                    } else {
+                        alert("Nenhum dado de produto encontrado no arquivo Excel após o cabeçalho. Certifique-se de que a primeira linha é o cabeçalho e há dados nas colunas.");
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            } else {
+                alert("Por favor, selecione um arquivo Excel.");
+            }
+        }
+
+        function exportExcel() {
+            const data = [
+                ["Nome", "Preço", "Imagem", "Menu"]
+            ];
+            produtosSalvos.forEach(p => {
+                data.push([p.nome, p.preco, p.imagem, p.menu]);
+            });
+
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Produtos");
+            XLSX.writeFile(wb, "produtos.xlsx");
+        }
+
+        function deleteAllProducts() {
+            if (confirm("Tem certeza que deseja deletar TODOS os produtos? Esta ação é irreversível!")) {
+                produtosSalvos = [];
+                salvarProdutos();
+                carregarProdutosSalvos();
+                alert("Todos os produtos foram deletados.");
+            }
+        }
+
+        function saveCurrentHtml() {
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'index.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert("O arquivo HTML foi salvo como 'index.html'.");
+        }
+
+        function openImageModal(imageUrl, altText) {
+            const imageModal = document.getElementById('image-modal');
+            const modalImage = document.getElementById('modal-image');
+            modalImage.src = imageUrl;
+            modalImage.alt = altText;
+            imageModal.style.display = 'flex';
+        }
+
+        function closeImageModal() {
+            document.getElementById('image-modal').style.display = 'none';
+        }
+
+        window.onload = function() {
+            localStorage.removeItem('isAdminLoggedIn');
+            carregarProdutosSalvos();
+            mostrarPainel('produtos');
+            renderCart();
+        };
+    </script>
+</body>
+</html>

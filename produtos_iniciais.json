@@ -1,38 +1,44 @@
 [
  {
-  "nome": "Estilete 2",
-  "valor": 9.5,
-  "imagem_id": "https:\/\/i.imgur.com\/XePLgzW.jpeg",
-  "menu": "produtos"
+  "ID": "Prod_1",
+  "Nome": "Estilete 2",
+  "Preco": 9.5,
+  "Imagem": "https:\/\/i.imgur.com\/XePLgzW.jpeg",
+  "Menu": "produtos"
  },
  {
-  "nome": "Torquês Armador",
-  "valor": 45,
-  "imagem_id": "https:\/\/i.imgur.com\/HpwMEIn.jpeg",
-  "menu": "produtos"
+  "ID": "Prod_2",
+  "Nome": "Torquês Armador",
+  "Preco": 45,
+  "Imagem": "https:\/\/i.imgur.com\/HpwMEIn.jpeg",
+  "Menu": "produtos"
  },
  {
-  "nome": "Estilete 1",
-  "valor": 11.5,
-  "imagem_id": "https:\/\/i.imgur.com\/ZZtUnso.jpeg",
-  "menu": "produtos"
+  "ID": "Prod_3",
+  "Nome": "Estilete 1",
+  "Preco": 11.5,
+  "Imagem": "https:\/\/i.imgur.com\/ZZtUnso.jpeg",
+  "Menu": "produtos"
  },
  {
-  "nome": "Estilete 2",
-  "valor": 9.5,
-  "imagem_id": "https:\/\/i.imgur.com\/XePLgzW.jpeg",
-  "menu": "ofertas"
+  "ID": "Prod_4",
+  "Nome": "Estilete 2",
+  "Preco": 9.5,
+  "Imagem": "https:\/\/i.imgur.com\/XePLgzW.jpeg",
+  "Menu": "ofertas"
  },
  {
-  "nome": "Alicate Universal 8\" - Promoção",
-  "valor": 30,
-  "imagem_id": "https:\/\/i.imgur.com\/HpwMEIn.jpeg",
-  "menu": "ofertas"
+  "ID": "Prod_5",
+  "Nome": "Alicate Universal 8\" - Promoção",
+  "Preco": 30,
+  "Imagem": "https:\/\/i.imgur.com\/HpwMEIn.jpeg",
+  "Menu": "ofertas"
  },
  {
-  "nome": "Torquês Armador - Promoção",
-  "valor": 40,
-  "imagem_id": "https:\/\/i.imgur.com\/HpwMEIn.jpeg",
-  "menu": "ofertas"
+  "ID": "Prod_6",
+  "Nome": "Torquês Armador - Promoção",
+  "Preco": 40,
+  "Imagem": "https:\/\/i.imgur.com\/HpwMEIn.jpeg",
+  "Menu": "ofertas"
  }
 ]

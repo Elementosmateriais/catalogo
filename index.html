@@ -285,13 +285,15 @@
         function carregarProdutosSalvos() {
             const storedProducts = localStorage.getItem('produtosSalvos');
             if (storedProducts) {
-                produtosSalvos = JSON.parse(storedProducts);
-            } else {
-                // Produtos de exemplo se não houver nada salvo
-                produtosSalvos = [
-                    { id: '1', nome: 'Produto A', categoria: 'Categoria 1', descricao: 'Descrição do Produto A', valor: 10.50, imagem: 'https://via.placeholder.com/150', menu: 'produtos' },
-                    { id: '2', nome: 'Produto B', categoria: 'Categoria 2', descricao: 'Descrição do Produto B', valor: 20.00, imagem: 'https://via.placeholder.com/150', menu: 'produtos' }
-                ];
+                produtosSalvos = data.map(row => ({
+    id: String(row.ID || row.id || Date.now() + Math.random().toString(36).substring(2, 8)), // Adicione row.id se seus IDs no JSON forem 'id'
+    nome: String(row.nome || 'Sem Nome'), // seu JSON tem 'nome'
+    categoria: String(row.Categoria || 'Geral'), // seu JSON não tem 'Categoria'
+    descricao: String(row.Descricao || ''), // seu JSON não tem 'Descricao'
+    valor: parseFloat(row.valor) || 0, // SEU JSON TEM 'valor', NÃO 'Preco'
+    imagem: String(row.imagem_id || 'https://via.placeholder.com/150'), // SEU JSON TEM 'imagem_id', NÃO 'Imagem'
+    menu: String(row.menu || 'produtos')
+}));
                 salvarProdutos(); // Salva os produtos de exemplo para iniciar
             }
             renderProducts();
