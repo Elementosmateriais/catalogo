@@ -3,27 +3,21 @@
   "builds": [
     {
       "src": "index.html",
-      "use": "@vercel/static-build",
-      "config": {
-        "outputDirectory": "public"
-      }
+      "use": "@vercel/static-build"
     },
     {
       "src": "produtos_iniciais.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "outputDirectory": "public"
-      }
+      "use": "@vercel/static-build"
     }
   ],
   "routes": [
     {
-      "src": "/public/(.*)",
-      "dest": "/public/$1"
+      "src": "/produtos_iniciais.json",
+      "dest": "/produtos_iniciais.json"
     },
     {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "/index.html"
     }
   ]
 }
