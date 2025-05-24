@@ -1,0 +1,38 @@
+[
+ {
+  "nome": "Estilete 2",
+  "valor": 9.5,
+  "imagem_id": "https:\/\/i.imgur.com\/XePLgzW.jpeg",
+  "menu": "produtos"
+ },
+ {
+  "nome": "Torquês Armador",
+  "valor": 45,
+  "imagem_id": "https:\/\/i.imgur.com\/HpwMEIn.jpeg",
+  "menu": "produtos"
+ },
+ {
+  "nome": "Estilete 1",
+  "valor": 11.5,
+  "imagem_id": "https:\/\/i.imgur.com\/ZZtUnso.jpeg",
+  "menu": "produtos"
+ },
+ {
+  "nome": "Estilete 2",
+  "valor": 9.5,
+  "imagem_id": "https:\/\/i.imgur.com\/XePLgzW.jpeg",
+  "menu": "ofertas"
+ },
+ {
+  "nome": "Alicate Universal 8\" - Promoção",
+  "valor": 30,
+  "imagem_id": "https:\/\/i.imgur.com\/HpwMEIn.jpeg",
+  "menu": "ofertas"
+ },
+ {
+  "nome": "Torquês Armador - Promoção",
+  "valor": 40,
+  "imagem_id": "https:\/\/i.imgur.com\/HpwMEIn.jpeg",
+  "menu": "ofertas"
+ }
+]
