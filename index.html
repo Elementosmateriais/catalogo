@@ -692,10 +692,20 @@
         }
 
         window.onload = function() {
-            localStorage.removeItem('isAdminLoggedIn'); // Limpa o login de admin ao carregar a página
+            // Limpa TODO o localStorage ao carregar a página pela primeira vez
+            // Isso irá apagar produtos salvos, carrinho e login de admin.
+            // É uma medida extrema para garantir um "estado limpo"
+            // mas remova essa linha depois que o carrinho voltar a funcionar
+            // e os produtos estiverem persistindo corretamente.
+            localStorage.clear(); 
+            
+            // Re-adiciona o login de admin, pois localStorage.clear() remove
+            // Isso é opcional e apenas para o processo de depuração
+            localStorage.removeItem('isAdminLoggedIn'); // Ainda limpa o login de admin para forçar login
+            
             carregarProdutosSalvos();
             mostrarPainel('produtos');
-            renderCart(); // Garante que o carrinho é renderizado ao carregar a página
+            renderCart();
         };
     </script>
 </body>
