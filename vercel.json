@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "index.html",
+      "use": "@vercel/static-build",
+      "config": {
+        "outputDirectory": "public"
+      }
+    },
+    {
+      "src": "produtos_iniciais.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "outputDirectory": "public"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/public/(.*)",
+      "dest": "/public/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ]
+}
