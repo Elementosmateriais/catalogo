@@ -176,7 +176,7 @@
 </head>
 <body>
     <header>
-        <img src="https://catalogo.vercel.app/imagens/Logo.PNG" alt="Elementos Materiais Logo v3" class="logo">
+        <img src="https://catalogo.vercel.app/imagens/Logo.PNG" alt="Elementos Materiais Logo v2" class="logo">
         <h1>Catálogo de Produtos</h1>
     </header>
     <nav>
